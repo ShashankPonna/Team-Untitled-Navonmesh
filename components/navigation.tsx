@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { createClient } from "@/utils/supabase/client"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   LayoutDashboard,
@@ -15,11 +16,12 @@ import {
   Menu,
   X,
   Boxes,
+  LogOut,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/forecasting", label: "Forecasting", icon: TrendingUp },
   { href: "/inventory", label: "Inventory", icon: Package },
   { href: "/transfers", label: "Transfers", icon: ArrowLeftRight },
@@ -30,7 +32,15 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const handleLogout = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push("/login")
+    router.refresh()
+  }
 
   return (
     <>
@@ -86,6 +96,13 @@ export default function Navigation() {
                 </Link>
               )
             })}
+            <button
+              onClick={handleLogout}
+              className="relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:text-destructive"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Log out</span>
+            </button>
           </div>
 
           {/* Mobile toggle */}
@@ -129,6 +146,16 @@ export default function Navigation() {
                   </Link>
                 )
               })}
+              <button
+                onClick={() => {
+                  setMobileOpen(false)
+                  handleLogout()
+                }}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:text-destructive text-left"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Log out</span>
+              </button>
             </div>
           </motion.div>
         )}

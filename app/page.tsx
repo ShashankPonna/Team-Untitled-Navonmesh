@@ -1,166 +1,63 @@
-"use client"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Boxes, ArrowRight, TrendingUp, Package, LayoutDashboard } from "lucide-react"
 
-import {
-  DollarSign,
-  AlertTriangle,
-  TrendingUp,
-  Clock,
-  PackageX,
-  Gauge,
-  Percent,
-  BarChart3,
-} from "lucide-react"
-import AppShell from "@/components/app-shell"
-import KpiCard from "@/components/kpi-card"
-import {
-  DemandForecastChart,
-  StockVsDemandChart,
-  StoreComparisonChart,
-} from "@/components/dashboard-charts"
-import RiskHeatmap from "@/components/risk-heatmap"
-import AlertsPanel from "@/components/alerts-panel"
-import {
-  ScrollReveal,
-  StaggerContainer,
-  StaggerItem,
-  ScaleOnScroll,
-} from "@/components/scroll-animations"
-import { useDashboard } from "@/hooks/use-api"
-import { kpiData as fallbackKpi } from "@/lib/mock-data"
+export default function LandingPage() {
+    return (
+        <div className="min-h-screen bg-background text-foreground flex flex-col pt-16 selection:bg-primary/30">
+            <main className="flex-1 flex items-center justify-center p-6 text-center">
+                <div className="max-w-3xl space-y-8 animate-in fade-in zoom-in duration-700">
+                    <div className="flex justify-center">
+                        <div className="h-16 w-16 bg-primary/20 flex items-center justify-center rounded-2xl shadow-xl shadow-primary/10">
+                            <Boxes className="h-10 w-10 text-primary" />
+                        </div>
+                    </div>
+                    <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight">
+                        Welcome to <span className="text-primary italic">OptiStock AI</span>
+                    </h1>
+                    <p className="text-lg sm:text-2xl text-muted-foreground max-w-2xl mx-auto opacity-90">
+                        The intelligent inventory optimization platform. Manage multi-location stock, predict demand, and stop stockouts before they happen.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+                        <Button asChild size="lg" className="h-14 px-8 text-lg font-semibold rounded-xl">
+                            <Link href="/login">
+                                Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                        </Button>
+                        <Button asChild size="lg" variant="outline" className="h-14 px-8 text-lg font-semibold rounded-xl">
+                            <Link href="/dashboard">
+                                View Dashboard
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
+            </main>
 
-export default function DashboardPage() {
-  const { data, isLoading } = useDashboard()
-
-  // Use API data when available; only use mock data as a loading fallback
-  const kpi = data?.kpi ?? (isLoading ? fallbackKpi : fallbackKpi)
-
-  return (
-    <AppShell>
-      {/* Header */}
-      <ScrollReveal>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground text-balance">
-            Dashboard
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Real-time inventory intelligence across all locations.
-          </p>
+            <div className="py-20 bg-background/50 border-t border-border mt-auto">
+                <div className="max-w-5xl mx-auto px-6 grid sm:grid-cols-3 gap-8">
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                            <TrendingUp className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-xl font-bold">Predict Demand</h3>
+                        <p className="text-muted-foreground text-sm">AI-driven forecasts to ensure you always have what you need.</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                            <LayoutDashboard className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-xl font-bold">Global Insights</h3>
+                        <p className="text-muted-foreground text-sm">Monitor KPIs across all locations from a unified dashboard.</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                            <Package className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-xl font-bold">Smart Transfers</h3>
+                        <p className="text-muted-foreground text-sm">Automatically resolve shortages before they impact customers.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-      </ScrollReveal>
-
-      {/* KPI Cards */}
-      <StaggerContainer className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" staggerDelay={0.08}>
-        <StaggerItem>
-          <KpiCard
-            title="Inventory Value"
-            value={kpi.totalInventoryValue}
-            change={kpi.totalInventoryValueChange}
-            prefix="$"
-            icon={DollarSign}
-            iconColor="text-primary"
-          />
-        </StaggerItem>
-        <StaggerItem>
-          <KpiCard
-            title="Risk Alerts"
-            value={kpi.riskAlerts}
-            change={kpi.riskAlertsChange}
-            icon={AlertTriangle}
-            iconColor="text-destructive"
-          />
-        </StaggerItem>
-        <StaggerItem>
-          <KpiCard
-            title="Forecasted Demand"
-            value={kpi.forecastedDemand}
-            change={kpi.forecastedDemandChange}
-            icon={TrendingUp}
-            iconColor="text-primary"
-          />
-        </StaggerItem>
-        <StaggerItem>
-          <KpiCard
-            title="Expiry Alerts"
-            value={kpi.expiryAlerts}
-            change={kpi.expiryAlertsChange}
-            icon={Clock}
-            iconColor="text-warning"
-          />
-        </StaggerItem>
-      </StaggerContainer>
-
-      {/* Secondary KPIs */}
-      <StaggerContainer className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" staggerDelay={0.08}>
-        <StaggerItem>
-          <KpiCard
-            title="Overstock Alerts"
-            value={kpi.overstockAlerts}
-            change={kpi.overstockAlertsChange}
-            icon={PackageX}
-            iconColor="text-info"
-          />
-        </StaggerItem>
-        <StaggerItem>
-          <KpiCard
-            title="Service Level"
-            value={kpi.serviceLevel}
-            change={2.1}
-            suffix="%"
-            decimals={1}
-            icon={Gauge}
-            iconColor="text-success"
-          />
-        </StaggerItem>
-        <StaggerItem>
-          <KpiCard
-            title="Fill Rate"
-            value={kpi.fillRate}
-            change={1.8}
-            suffix="%"
-            decimals={1}
-            icon={Percent}
-            iconColor="text-primary"
-          />
-        </StaggerItem>
-        <StaggerItem>
-          <KpiCard
-            title="Inventory Turnover"
-            value={kpi.inventoryTurnover}
-            change={5.2}
-            suffix="x"
-            decimals={1}
-            icon={BarChart3}
-            iconColor="text-primary"
-          />
-        </StaggerItem>
-      </StaggerContainer>
-
-      {/* Charts Row 1 */}
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ScrollReveal delay={0.1}>
-          <DemandForecastChart data={data?.demandForecastData} />
-        </ScrollReveal>
-        <ScrollReveal delay={0.2}>
-          <StockVsDemandChart data={data?.stockVsDemandData} />
-        </ScrollReveal>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <ScrollReveal delay={0.1} className="lg:col-span-1">
-          <StoreComparisonChart />
-        </ScrollReveal>
-        <ScaleOnScroll className="lg:col-span-2">
-          <RiskHeatmap />
-        </ScaleOnScroll>
-      </div>
-
-      {/* Alerts */}
-      <div className="mt-6">
-        <ScrollReveal delay={0.15}>
-          <AlertsPanel />
-        </ScrollReveal>
-      </div>
-    </AppShell>
-  )
+    )
 }
