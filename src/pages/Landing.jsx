@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import SupplyChainScene from '../components/three/SupplyChainScene'
 import { Canvas3DErrorBoundary } from '../components/ui/ErrorBoundary'
+import { TypingAnimation } from '../components/ui/TypingAnimation'
 
 const stats = [
     { value: '40%', label: 'Stockout Reduction' },
@@ -19,37 +20,37 @@ const features = [
         icon: Brain,
         title: 'AI-Powered Forecasting',
         description: 'Multi-model ensemble (ARIMA, XGBoost, LSTM) with seasonal and event-aware demand prediction at SKU-level granularity.',
-        gradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+        gradient: 'linear-gradient(135deg, #f43f5e, #f472b6)',
     },
     {
         icon: Zap,
         title: 'Dynamic Replenishment',
         description: 'Auto-calculated reorder points, safety stock optimization, and real-time PO generation when thresholds are breached.',
-        gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+        gradient: 'linear-gradient(135deg, #f472b6, #e11d48)',
     },
     {
         icon: Building2,
         title: 'Multi-Warehouse Intelligence',
         description: 'Cross-node inventory balancing with redistribution recommendations to eliminate overstock and emergency shipments.',
-        gradient: 'linear-gradient(135deg, #14b8a6, #10b981)',
+        gradient: 'linear-gradient(135deg, #fb923c, #f97316)',
     },
     {
         icon: Package,
         title: 'Perishable Management',
         description: 'FIFO/FEFO rotation enforcement with expiry tracking, automated alerts at 7/3/1 day intervals before expiration.',
-        gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+        gradient: 'linear-gradient(135deg, #fbbf24, #e11d48)',
     },
     {
         icon: BarChart3,
         title: 'Real-Time Dashboard',
         description: 'Unified inventory visibility with configurable KPI monitoring, drill-down analytics, and role-based executive views.',
-        gradient: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+        gradient: 'linear-gradient(135deg, #f472b6, #f472b6)',
     },
     {
         icon: Globe,
         title: 'Enterprise Integrations',
         description: 'Pre-built connectors for SAP, Oracle, Dynamics with REST API and webhook support for custom WMS/POS systems.',
-        gradient: 'linear-gradient(135deg, #ec4899, #f59e0b)',
+        gradient: 'linear-gradient(135deg, #e11d48, #fbbf24)',
     },
 ]
 
@@ -66,11 +67,22 @@ const item = {
     show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] } }
 }
 
+
+
 export default function Landing() {
     return (
         <div className="landing-page">
             {/* Hero Section */}
             <section className="hero-section">
+                {/* Decorative grid */}
+                <div aria-hidden="true" style={{
+                    position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+                    backgroundImage:
+                        'linear-gradient(rgba(244,63,94,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.04) 1px, transparent 1px)',
+                    backgroundSize: '60px 60px',
+                    maskImage: 'radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%)',
+                }} />
                 <div className="hero-canvas">
                     <Canvas3DErrorBoundary label="Supply Chain Visualization">
                         <SupplyChainScene />
@@ -93,11 +105,11 @@ export default function Landing() {
                             gap: 8,
                             padding: '6px 16px',
                             borderRadius: 9999,
-                            background: 'rgba(6, 182, 212, 0.1)',
-                            border: '1px solid rgba(6, 182, 212, 0.2)',
+                            background: 'rgba(244, 63, 94, 0.1)',
+                            border: '1px solid rgba(244, 63, 94, 0.2)',
                             marginBottom: 24,
                             fontSize: '0.82rem',
-                            color: '#22d3ee',
+                            color: '#fb7185',
                             fontWeight: 600,
                         }}
                     >
@@ -105,10 +117,10 @@ export default function Landing() {
                         Ticket #26008 · v1.0
                     </motion.div>
 
-                    <h1>
-                        <span className="gradient-text">Intelligent Inventory</span>
-                        <br />Optimization Framework
-                    </h1>
+                    <TypingAnimation
+                        text="Intelligent Inventory Optimization Framework"
+                        duration={55}
+                    />
                     <p>
                         AI-powered supply chain intelligence that dynamically balances supply and demand,
                         minimizes stockouts, reduces overstock, and delivers actionable replenishment
@@ -129,7 +141,7 @@ export default function Landing() {
             <motion.section
                 className="stats-bar"
                 style={{
-                    background: 'rgba(15, 23, 42, 0.6)',
+                    background: 'rgba(24, 24, 27, 0.6)',
                     backdropFilter: 'blur(20px)',
                     borderTop: '1px solid rgba(148,163,184,0.08)',
                     borderBottom: '1px solid rgba(148,163,184,0.08)',
@@ -188,7 +200,7 @@ export default function Landing() {
                 style={{
                     textAlign: 'center',
                     padding: '80px 24px',
-                    background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.08), transparent 70%)',
+                    background: 'radial-gradient(ellipse at center, rgba(244,63,94,0.08), transparent 70%)',
                 }}
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}

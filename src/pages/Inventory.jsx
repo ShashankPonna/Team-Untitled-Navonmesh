@@ -25,10 +25,10 @@ const perishables = [
 ]
 
 const statusConfig = {
-    critical: { color: '#ef4444', bg: 'rgba(239,68,68,0.12)', label: 'Stockout Risk' },
-    overstock: { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', label: 'Overstock' },
-    optimal: { color: '#10b981', bg: 'rgba(16,185,129,0.12)', label: 'Optimal' },
-    expiring: { color: '#ec4899', bg: 'rgba(236,72,153,0.12)', label: 'Expiring' },
+    critical: { color: '#e11d48', bg: 'rgba(239,68,68,0.12)', label: 'Stockout Risk' },
+    overstock: { color: '#fbbf24', bg: 'rgba(245,158,11,0.12)', label: 'Overstock' },
+    optimal: { color: '#f97316', bg: 'rgba(16,185,129,0.12)', label: 'Optimal' },
+    expiring: { color: '#e11d48', bg: 'rgba(236,72,153,0.12)', label: 'Expiring' },
 }
 
 export default function Inventory() {
@@ -40,10 +40,10 @@ export default function Inventory() {
             </div>
 
             <div className="kpi-grid">
-                <KPICard title="Total SKUs Tracked" value="24850" change="320 new" changeType="positive" icon={Package} gradient="linear-gradient(135deg, #06b6d4, #3b82f6)" />
-                <KPICard title="Stockout Risks" value="12" change="3 critical" changeType="negative" icon={ShieldAlert} gradient="linear-gradient(135deg, #ef4444, #f59e0b)" />
-                <KPICard title="Avg Days of Supply" value="14" suffix="d" change="2.1d improved" changeType="positive" icon={Clock} gradient="linear-gradient(135deg, #14b8a6, #10b981)" />
-                <KPICard title="Expiry Alerts" value="8" change="2 urgent" changeType="negative" icon={Thermometer} gradient="linear-gradient(135deg, #ec4899, #8b5cf6)" />
+                <KPICard title="Total SKUs Tracked" value="24850" change="320 new" changeType="positive" icon={Package} gradient="linear-gradient(135deg, #f43f5e, #f472b6)" />
+                <KPICard title="Stockout Risks" value="12" change="3 critical" changeType="negative" icon={ShieldAlert} gradient="linear-gradient(135deg, #e11d48, #fbbf24)" />
+                <KPICard title="Avg Days of Supply" value="14" suffix="d" change="2.1d improved" changeType="positive" icon={Clock} gradient="linear-gradient(135deg, #fb923c, #f97316)" />
+                <KPICard title="Expiry Alerts" value="8" change="2 urgent" changeType="negative" icon={Thermometer} gradient="linear-gradient(135deg, #e11d48, #f472b6)" />
             </div>
 
             {/* 3D Warehouse */}
@@ -88,7 +88,7 @@ export default function Inventory() {
                                     <td>{item.rop.toLocaleString()}</td>
                                     <td>{item.safety}</td>
                                     <td>
-                                        <span style={{ fontWeight: 600, color: item.daysOfSupply <= 3 ? '#ef4444' : item.daysOfSupply <= 7 ? '#f59e0b' : '#10b981' }}>
+                                        <span style={{ fontWeight: 600, color: item.daysOfSupply <= 3 ? '#e11d48' : item.daysOfSupply <= 7 ? '#fbbf24' : '#f97316' }}>
                                             {item.daysOfSupply}d
                                         </span>
                                     </td>
@@ -143,7 +143,7 @@ export default function Inventory() {
                                 <td>
                                     <span style={{
                                         fontWeight: 700,
-                                        color: p.daysLeft <= 1 ? '#ef4444' : p.daysLeft <= 3 ? '#f59e0b' : p.daysLeft <= 7 ? '#ec4899' : '#10b981',
+                                        color: p.daysLeft <= 1 ? '#e11d48' : p.daysLeft <= 3 ? '#fbbf24' : p.daysLeft <= 7 ? '#e11d48' : '#f97316',
                                         fontSize: '0.95rem',
                                     }}>
                                         {p.daysLeft}d

@@ -60,22 +60,22 @@ function Forklift({ startPos }) {
             {/* Body */}
             <mesh position={[0, 0.2, 0]}>
                 <boxGeometry args={[0.5, 0.3, 0.7]} />
-                <meshStandardMaterial color="#06b6d4" metalness={0.6} roughness={0.3} />
+                <meshStandardMaterial color="#f43f5e" metalness={0.6} roughness={0.3} />
             </mesh>
             {/* Fork */}
             <mesh position={[0, 0.05, -0.5]}>
                 <boxGeometry args={[0.4, 0.04, 0.3]} />
-                <meshStandardMaterial color="#f59e0b" metalness={0.7} roughness={0.3} />
+                <meshStandardMaterial color="#fbbf24" metalness={0.7} roughness={0.3} />
             </mesh>
             {/* Wheels */}
             {[[-0.2, 0, 0.25], [0.2, 0, 0.25], [-0.2, 0, -0.25], [0.2, 0, -0.25]].map((p, i) => (
                 <mesh key={i} position={p}>
                     <sphereGeometry args={[0.06, 8, 8]} />
-                    <meshStandardMaterial color="#1e293b" />
+                    <meshStandardMaterial color="#18181b" />
                 </mesh>
             ))}
             {/* Light */}
-            <pointLight position={[0, 0.5, -0.5]} color="#06b6d4" intensity={0.3} distance={2} />
+            <pointLight position={[0, 0.5, -0.5]} color="#f43f5e" intensity={0.3} distance={2} />
         </group>
     )
 }
@@ -100,29 +100,29 @@ function Scene() {
         {
             pos: [-3, 0, -2],
             boxes: [
-                { pos: [-0.7, 0.35, 0], size: [0.5, 0.5, 0.5], color: '#06b6d4' },
-                { pos: [0.2, 0.35, 0], size: [0.4, 0.4, 0.5], color: '#10b981' },
-                { pos: [0.8, 0.35, 0], size: [0.3, 0.5, 0.4], color: '#8b5cf6' },
-                { pos: [-0.5, 1.55, 0], size: [0.6, 0.5, 0.5], color: '#f59e0b' },
-                { pos: [0.4, 1.55, 0], size: [0.5, 0.4, 0.5], color: '#ef4444' },
+                { pos: [-0.7, 0.35, 0], size: [0.5, 0.5, 0.5], color: '#f43f5e' },
+                { pos: [0.2, 0.35, 0], size: [0.4, 0.4, 0.5], color: '#f97316' },
+                { pos: [0.8, 0.35, 0], size: [0.3, 0.5, 0.4], color: '#f472b6' },
+                { pos: [-0.5, 1.55, 0], size: [0.6, 0.5, 0.5], color: '#fbbf24' },
+                { pos: [0.4, 1.55, 0], size: [0.5, 0.4, 0.5], color: '#e11d48' },
             ]
         },
         {
             pos: [0, 0, -2],
             boxes: [
-                { pos: [-0.5, 0.35, 0], size: [0.5, 0.5, 0.5], color: '#3b82f6' },
-                { pos: [0.5, 0.35, 0], size: [0.4, 0.6, 0.4], color: '#ec4899' },
-                { pos: [0, 1.55, 0], size: [0.7, 0.4, 0.5], color: '#14b8a6' },
-                { pos: [-0.8, 1.55, 0], size: [0.3, 0.5, 0.3], color: '#06b6d4' },
+                { pos: [-0.5, 0.35, 0], size: [0.5, 0.5, 0.5], color: '#f472b6' },
+                { pos: [0.5, 0.35, 0], size: [0.4, 0.6, 0.4], color: '#e11d48' },
+                { pos: [0, 1.55, 0], size: [0.7, 0.4, 0.5], color: '#fb923c' },
+                { pos: [-0.8, 1.55, 0], size: [0.3, 0.5, 0.3], color: '#f43f5e' },
             ]
         },
         {
             pos: [3, 0, -2],
             boxes: [
-                { pos: [-0.3, 0.35, 0], size: [0.5, 0.5, 0.5], color: '#8b5cf6' },
-                { pos: [0.6, 0.35, 0], size: [0.35, 0.4, 0.5], color: '#f59e0b' },
-                { pos: [0, 1.55, 0], size: [0.5, 0.5, 0.5], color: '#10b981' },
-                { pos: [0.7, 1.55, 0], size: [0.4, 0.35, 0.4], color: '#3b82f6' },
+                { pos: [-0.3, 0.35, 0], size: [0.5, 0.5, 0.5], color: '#f472b6' },
+                { pos: [0.6, 0.35, 0], size: [0.35, 0.4, 0.5], color: '#fbbf24' },
+                { pos: [0, 1.55, 0], size: [0.5, 0.5, 0.5], color: '#f97316' },
+                { pos: [0.7, 1.55, 0], size: [0.4, 0.35, 0.4], color: '#f472b6' },
             ]
         },
     ], [])
@@ -131,8 +131,8 @@ function Scene() {
         <>
             <ambientLight intensity={0.25} />
             <pointLight position={[0, 6, 2]} intensity={0.6} color="#e2e8f0" />
-            <pointLight position={[-4, 3, 3]} intensity={0.3} color="#06b6d4" />
-            <pointLight position={[4, 3, 3]} intensity={0.3} color="#8b5cf6" />
+            <pointLight position={[-4, 3, 3]} intensity={0.3} color="#f43f5e" />
+            <pointLight position={[4, 3, 3]} intensity={0.3} color="#f472b6" />
 
             <Floor />
             {shelves.map((s, i) => (

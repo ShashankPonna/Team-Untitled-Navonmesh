@@ -46,7 +46,7 @@ function ConveyorBelt() {
             <mesh position={[0, -1.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <ringGeometry args={[2, 4, 64]} />
                 <meshStandardMaterial
-                    color="#1e293b"
+                    color="#18181b"
                     roughness={0.5}
                     metalness={0.8}
                     transparent
@@ -63,8 +63,8 @@ function ConveyorBelt() {
                     <mesh key={i} position={[x, -1.4, z]}>
                         <cylinderGeometry args={[0.02, 0.02, 0.3, 8]} />
                         <meshStandardMaterial
-                            color="#06b6d4"
-                            emissive="#06b6d4"
+                            color="#f43f5e"
+                            emissive="#f43f5e"
                             emissiveIntensity={0.3}
                         />
                     </mesh>
@@ -107,7 +107,7 @@ function ParticleField() {
             </bufferGeometry>
             <pointsMaterial
                 size={0.04}
-                color="#06b6d4"
+                color="#f43f5e"
                 transparent
                 opacity={0.6}
                 sizeAttenuation
@@ -118,24 +118,24 @@ function ParticleField() {
 
 function Scene() {
     const boxes = useMemo(() => [
-        { pos: [-3, 0, -1], color: '#06b6d4', scale: 0.8, speed: 0.8 },
-        { pos: [3, 1, -2], color: '#8b5cf6', scale: 0.6, speed: 1.2 },
-        { pos: [-1.5, -0.5, 1], color: '#14b8a6', scale: 0.7, speed: 1 },
-        { pos: [2, -1, 1], color: '#3b82f6', scale: 0.5, speed: 0.9 },
-        { pos: [0, 2, -3], color: '#ec4899', scale: 0.4, speed: 1.1 },
-        { pos: [-2.5, 1.5, -2], color: '#f59e0b', scale: 0.55, speed: 0.7 },
-        { pos: [1.5, 0.5, 2], color: '#10b981', scale: 0.65, speed: 1.3 },
-        { pos: [-0.5, -1.5, -1], color: '#06b6d4', scale: 0.45, speed: 0.6 },
-        { pos: [4, 0, 0], color: '#8b5cf6', scale: 0.35, speed: 1.4 },
-        { pos: [-4, -0.5, 1], color: '#3b82f6', scale: 0.5, speed: 0.8 },
+        { pos: [-3, 0, -1], color: '#f43f5e', scale: 0.8, speed: 0.8 },
+        { pos: [3, 1, -2], color: '#f472b6', scale: 0.6, speed: 1.2 },
+        { pos: [-1.5, -0.5, 1], color: '#fb923c', scale: 0.7, speed: 1 },
+        { pos: [2, -1, 1], color: '#f472b6', scale: 0.5, speed: 0.9 },
+        { pos: [0, 2, -3], color: '#e11d48', scale: 0.4, speed: 1.1 },
+        { pos: [-2.5, 1.5, -2], color: '#fbbf24', scale: 0.55, speed: 0.7 },
+        { pos: [1.5, 0.5, 2], color: '#f97316', scale: 0.65, speed: 1.3 },
+        { pos: [-0.5, -1.5, -1], color: '#f43f5e', scale: 0.45, speed: 0.6 },
+        { pos: [4, 0, 0], color: '#f472b6', scale: 0.35, speed: 1.4 },
+        { pos: [-4, -0.5, 1], color: '#f472b6', scale: 0.5, speed: 0.8 },
     ], [])
 
     return (
         <>
             <ambientLight intensity={0.3} />
-            <pointLight position={[5, 5, 5]} intensity={0.8} color="#06b6d4" />
-            <pointLight position={[-5, 3, -5]} intensity={0.5} color="#8b5cf6" />
-            <spotLight position={[0, 8, 0]} angle={0.5} penumbra={1} intensity={0.4} color="#14b8a6" />
+            <pointLight position={[5, 5, 5]} intensity={0.8} color="#f43f5e" />
+            <pointLight position={[-5, 3, -5]} intensity={0.5} color="#f472b6" />
+            <spotLight position={[0, 8, 0]} angle={0.5} penumbra={1} intensity={0.4} color="#fb923c" />
 
             {boxes.map((b, i) => (
                 <FloatingBox key={i} position={b.pos} color={b.color} scale={b.scale} speed={b.speed} />

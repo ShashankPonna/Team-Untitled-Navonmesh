@@ -27,7 +27,7 @@ function AnimatedCounter({ value, duration = 1.5 }) {
 
 export default function KPICard({ title, value, change, changeType, icon: Icon, suffix = '', gradient }) {
     const isPositive = changeType === 'positive'
-    const gradientBg = gradient || 'linear-gradient(135deg, #06b6d4, #8b5cf6)'
+    const gradientBg = gradient || 'linear-gradient(135deg, #f43f5e, #f472b6)'
 
     return (
         <motion.div
@@ -77,7 +77,7 @@ export default function KPICard({ title, value, change, changeType, icon: Icon, 
                             marginTop: 6,
                             fontSize: '0.82rem',
                             fontWeight: 600,
-                            color: isPositive ? '#10b981' : '#ef4444',
+                            color: isPositive ? '#f97316' : '#e11d48',
                             display: 'flex',
                             alignItems: 'center',
                             gap: 4,
