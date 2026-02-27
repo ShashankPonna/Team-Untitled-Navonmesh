@@ -22,54 +22,18 @@ Organizations across retail, manufacturing, and logistics face costly inventory 
 
 ---
 
-## 🏗️ Architecture
+## 👥 Team
 
-The platform is structured across five layers:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Application Layer                      │
-│       Dashboard · Alerts · Scenario Planner · API        │
-├─────────────────────────────────────────────────────────┤
-│                  Optimization Engine                     │
-│   Reorder Point · Safety Stock · FIFO/FEFO · Scheduler  │
-├─────────────────────────────────────────────────────────┤
-│                    AI / ML Engine                        │
-│     ARIMA · XGBoost · LSTM Ensemble · Anomaly Detection  │
-├─────────────────────────────────────────────────────────┤
-│                    Data Platform                         │
-│    Data Lake/Warehouse · Feature Store · Data Lineage    │
-├─────────────────────────────────────────────────────────┤
-│                  Data Ingestion Layer                    │
-│      ERP · WMS · POS Connectors · Kafka · Batch Import   │
-└─────────────────────────────────────────────────────────┘
-```
-
-| Layer | Responsibility |
-|-------|----------------|
-| **Data Ingestion** | ERP/WMS/POS connectors, Kafka streaming, batch imports |
-| **Data Platform** | Unified data lake, feature engineering, lineage tracking |
-| **AI / ML Engine** | Demand forecasting, anomaly detection, model retraining |
-| **Optimization Engine** | Reorder points, safety stock, multi-echelon balancing, FIFO/FEFO |
-| **Application Layer** | Dashboard UI, alerts, replenishment workflows, REST API |
-
----
+| Name | Role |
+|------|------|
+| **Vivek Dalimbkar** | Team Leader |
+| Soham Patil | Team Member |
+| Shashank Ponna | Team Member |
+| Atharva Vaidya | Team Member |
 
 ## 📄 Documentation
 
 Full Product Requirements Document (PRD) is available in [`https://drive.google.com/file/d/1jq6woa6NfmVH6eY9HKBlwuXOf7IIbPlR/view?usp=sharing`](pdf).
-
----
-
-## 🛠️ Tech Stack
-
-> To be finalized during Phase 0 architecture review.
-
-- **Data Platform:** Snowflake / BigQuery
-- **ML Framework:** Python (scikit-learn, PyTorch, statsmodels)
-- **Streaming:** Apache Kafka
-- **Backend:** REST API (OpenAPI 3.0)
-- **Infrastructure:** Cloud-native (AWS / GCP / Azure)
 
 ---
 
@@ -80,3 +44,4 @@ This repository is in its initial commit stage. Contribution guidelines will be 
 ---
 
 *For questions, reach out to the Product Team or reference the internal PRD linked above.*
+
