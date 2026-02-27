@@ -31,9 +31,9 @@ const categories = [
 ]
 
 const severityConfig = {
-    critical: { color: '#e11d48', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.25)' },
+    critical: { color: '#f87171', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.25)' },
     warning: { color: '#fbbf24', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)' },
-    info: { color: '#f43f5e', bg: 'rgba(244,63,94,0.12)', border: 'rgba(244,63,94,0.25)' },
+    info: { color: '#22d3ee', bg: 'rgba(6,182,212,0.12)', border: 'rgba(6,182,212,0.25)' },
 }
 
 export default function Alerts() {
@@ -65,15 +65,15 @@ export default function Alerts() {
                                 width: 44,
                                 height: 44,
                                 borderRadius: 12,
-                                background: 'rgba(239,68,68,0.15)',
-                                border: '1px solid rgba(239,68,68,0.3)',
+                                background: 'rgba(239,68,68,0.12)',
+                                border: '1px solid rgba(239,68,68,0.25)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 position: 'relative',
                             }}
                         >
-                            <Bell size={20} color="#e11d48" />
+                            <Bell size={20} color="#f87171" />
                             <span style={{
                                 position: 'absolute',
                                 top: -4,
@@ -81,7 +81,7 @@ export default function Alerts() {
                                 width: 18,
                                 height: 18,
                                 borderRadius: '50%',
-                                background: '#e11d48',
+                                background: '#ef4444',
                                 color: 'white',
                                 fontSize: '0.65rem',
                                 fontWeight: 700,
@@ -93,7 +93,7 @@ export default function Alerts() {
                             </span>
                         </motion.div>
                         <div style={{ textAlign: 'right' }}>
-                            <p style={{ fontSize: '0.8rem', color: '#e11d48', fontWeight: 600 }}>{criticalCount} Critical</p>
+                            <p style={{ fontSize: '0.8rem', color: '#f87171', fontWeight: 600 }}>{criticalCount} Critical</p>
                             <p style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 600 }}>{warningCount} Warnings</p>
                         </div>
                     </div>
@@ -168,7 +168,7 @@ export default function Alerts() {
                 </AnimatePresence>
                 {filtered.length === 0 && (
                     <div className="glass-card" style={{ textAlign: 'center', padding: 48 }}>
-                        <CheckCircle2 size={40} color="#f97316" style={{ marginBottom: 12 }} />
+                        <CheckCircle2 size={40} color="#22d3ee" style={{ marginBottom: 12 }} />
                         <h4>All Clear</h4>
                         <p style={{ color: 'var(--text-tertiary)' }}>No alerts match the current filters.</p>
                     </div>

@@ -36,10 +36,10 @@ const warehouseData = [
 ]
 
 const categoryData = [
-    { name: 'Electronics', value: 35, color: '#f43f5e' },
-    { name: 'Perishables', value: 22, color: '#f97316' },
-    { name: 'Apparel', value: 18, color: '#f472b6' },
-    { name: 'Home & Garden', value: 15, color: '#fbbf24' },
+    { name: 'Electronics', value: 35, color: '#06b6d4' },
+    { name: 'Perishables', value: 22, color: '#8b5cf6' },
+    { name: 'Apparel', value: 18, color: '#3b82f6' },
+    { name: 'Home & Garden', value: 15, color: '#10b981' },
     { name: 'Other', value: 10, color: '#64748b' },
 ]
 
@@ -88,7 +88,7 @@ export default function Dashboard() {
                     change="7.8%"
                     changeType="positive"
                     icon={TrendingDown}
-                    gradient="linear-gradient(135deg, #e11d48, #fbbf24)"
+                    gradient="linear-gradient(135deg, #ef4444, #f59e0b)"
                 />
                 <KPICard
                     title="Forecast Accuracy"
@@ -97,7 +97,7 @@ export default function Dashboard() {
                     change="4.2%"
                     changeType="positive"
                     icon={TrendingUp}
-                    gradient="linear-gradient(135deg, #f43f5e, #f472b6)"
+                    gradient="linear-gradient(135deg, #06b6d4, #3b82f6)"
                 />
                 <KPICard
                     title="Inventory Value"
@@ -106,7 +106,7 @@ export default function Dashboard() {
                     change="12%"
                     changeType="negative"
                     icon={DollarSign}
-                    gradient="linear-gradient(135deg, #f97316, #fb923c)"
+                    gradient="linear-gradient(135deg, #8b5cf6, #6366f1)"
                 />
                 <KPICard
                     title="Auto Orders"
@@ -115,7 +115,7 @@ export default function Dashboard() {
                     change="18%"
                     changeType="positive"
                     icon={Package}
-                    gradient="linear-gradient(135deg, #f472b6, #e11d48)"
+                    gradient="linear-gradient(135deg, #10b981, #14b8a6)"
                 />
             </div>
 
@@ -125,12 +125,12 @@ export default function Dashboard() {
                     <AreaChart data={demandSupplyData}>
                         <defs>
                             <linearGradient id="demandGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.3} />
-                                <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
+                                <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.3} />
+                                <stop offset="100%" stopColor="#06b6d4" stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="supplyGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#f472b6" stopOpacity={0.3} />
-                                <stop offset="100%" stopColor="#f472b6" stopOpacity={0} />
+                                <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                                <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
                             </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" />
@@ -138,9 +138,9 @@ export default function Dashboard() {
                         <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: '0.8rem', color: '#94a3b8' }} />
-                        <Area type="monotone" dataKey="demand" stroke="#f43f5e" fill="url(#demandGradient)" strokeWidth={2} name="Demand" />
-                        <Area type="monotone" dataKey="supply" stroke="#f472b6" fill="url(#supplyGradient)" strokeWidth={2} name="Supply" />
-                        <Area type="monotone" dataKey="forecast" stroke="#fbbf24" fill="none" strokeWidth={2} strokeDasharray="5 5" name="Forecast" />
+                        <Area type="monotone" dataKey="demand" stroke="#06b6d4" fill="url(#demandGradient)" strokeWidth={2} name="Demand" />
+                        <Area type="monotone" dataKey="supply" stroke="#8b5cf6" fill="url(#supplyGradient)" strokeWidth={2} name="Supply" />
+                        <Area type="monotone" dataKey="forecast" stroke="#f59e0b" fill="none" strokeWidth={2} strokeDasharray="5 5" name="Forecast" />
                     </AreaChart>
                 </ChartCard>
 
@@ -151,8 +151,8 @@ export default function Dashboard() {
                         <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: '0.8rem', color: '#94a3b8' }} />
-                        <Bar dataKey="stock" name="Current Stock" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="capacity" name="Capacity" fill="#18181b" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="stock" name="Current Stock" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="capacity" name="Capacity" fill="#1e293b" radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ChartCard>
             </div>
@@ -202,9 +202,9 @@ export default function Dashboard() {
                                 background: 'rgba(24, 24, 27, 0.4)',
                                 border: '1px solid rgba(148,163,184,0.05)',
                             }}>
-                                {alert.type === 'critical' ? <AlertTriangle size={16} color="#e11d48" style={{ marginTop: 2, flexShrink: 0 }} /> :
+                                {alert.type === 'critical' ? <AlertTriangle size={16} color="#f87171" style={{ marginTop: 2, flexShrink: 0 }} /> :
                                     alert.type === 'warning' ? <Clock size={16} color="#fbbf24" style={{ marginTop: 2, flexShrink: 0 }} /> :
-                                        <CheckCircle2 size={16} color="#f43f5e" style={{ marginTop: 2, flexShrink: 0 }} />}
+                                        <CheckCircle2 size={16} color="#22d3ee" style={{ marginTop: 2, flexShrink: 0 }} />}
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <p style={{ fontSize: '0.82rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>{alert.message}</p>
                                     <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: 2 }}>{alert.time}</p>

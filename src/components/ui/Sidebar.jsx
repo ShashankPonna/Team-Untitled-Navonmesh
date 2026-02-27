@@ -30,10 +30,10 @@ export default function Sidebar() {
                 top: 0,
                 left: 0,
                 height: '100vh',
-                background: 'rgba(24, 24, 27, 0.85)',
+                background: 'rgba(10, 10, 18, 0.95)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                borderRight: '1px solid rgba(148, 163, 184, 0.1)',
+                borderRight: '1px solid rgba(255, 255, 255, 0.06)',
                 zIndex: 100,
                 display: 'flex',
                 flexDirection: 'column',
@@ -43,7 +43,7 @@ export default function Sidebar() {
             {/* Logo */}
             <div style={{
                 padding: collapsed ? '20px 16px' : '20px 24px',
-                borderBottom: '1px solid rgba(148,163,184,0.08)',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
@@ -53,7 +53,7 @@ export default function Sidebar() {
                     width: 36,
                     height: 36,
                     borderRadius: 10,
-                    background: 'linear-gradient(135deg, #f43f5e, #f472b6)',
+                    background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -72,7 +72,7 @@ export default function Sidebar() {
                             fontWeight: 800,
                             fontSize: '1.1rem',
                             letterSpacing: '-0.02em',
-                            background: 'linear-gradient(135deg, #f43f5e, #f472b6)',
+                            background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                         }}>
@@ -113,8 +113,8 @@ export default function Sidebar() {
                                 borderRadius: 10,
                                 fontSize: '0.9rem',
                                 fontWeight: isActive ? 600 : 400,
-                                color: isActive ? '#fb7185' : '#94a3b8',
-                                background: isActive ? 'rgba(244, 63, 94, 0.1)' : 'transparent',
+                                color: isActive ? '#22d3ee' : '#94a3b8',
+                                background: isActive ? 'rgba(6, 182, 212, 0.1)' : 'transparent',
                                 textDecoration: 'none',
                                 transition: 'all 150ms ease',
                                 position: 'relative',
@@ -123,7 +123,7 @@ export default function Sidebar() {
                             }}
                             onMouseEnter={e => {
                                 if (!isActive) {
-                                    e.currentTarget.style.background = 'rgba(148, 163, 184, 0.06)'
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)'
                                     e.currentTarget.style.color = '#f1f5f9'
                                 }
                             }}
@@ -145,7 +145,7 @@ export default function Sidebar() {
                                         width: 3,
                                         height: 20,
                                         borderRadius: 3,
-                                        background: 'linear-gradient(180deg, #f43f5e, #f472b6)',
+                                        background: 'linear-gradient(180deg, #06b6d4, #3b82f6)',
                                     }}
                                     transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                                 />
@@ -164,8 +164,8 @@ export default function Sidebar() {
                     margin: '12px 8px 16px',
                     padding: '10px',
                     borderRadius: 10,
-                    border: '1px solid rgba(148,163,184,0.1)',
-                    background: 'rgba(39, 39, 42, 0.5)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    background: 'rgba(255, 255, 255, 0.03)',
                     color: '#94a3b8',
                     cursor: 'pointer',
                     display: 'flex',
@@ -175,8 +175,8 @@ export default function Sidebar() {
                     fontSize: '0.8rem',
                     transition: 'all 150ms ease',
                 }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(244,63,94,0.3)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(148,163,184,0.1)'}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'}
             >
                 {collapsed ? <ChevronRight size={16} /> : <><ChevronLeft size={16} /> Collapse</>}
             </button>

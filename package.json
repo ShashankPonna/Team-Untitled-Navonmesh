@@ -9,15 +9,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^9.96.0",
+    "@react-three/fiber": "^8.15.0",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.9.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.18.2",
+    "lucide-react": "^0.330.0",
+    "next-themes": "^0.4.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0",
-    "@react-three/fiber": "^8.15.0",
-    "@react-three/drei": "^9.96.0",
-    "three": "^0.161.0",
-    "framer-motion": "^11.0.0",
     "recharts": "^2.12.0",
-    "lucide-react": "^0.330.0"
+    "tailwind-merge": "^3.5.0",
+    "three": "^0.161.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

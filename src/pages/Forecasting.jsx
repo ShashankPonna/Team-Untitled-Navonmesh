@@ -78,10 +78,10 @@ export default function Forecasting() {
 
             {/* KPIs */}
             <div className="kpi-grid">
-                <KPICard title="Forecast Accuracy" value="87" suffix="%" change="4.2%" changeType="positive" icon={Brain} gradient="linear-gradient(135deg, #f43f5e, #f472b6)" />
-                <KPICard title="Anomalies Detected" value="14" change="3 new" changeType="negative" icon={Activity} gradient="linear-gradient(135deg, #e11d48, #fbbf24)" />
-                <KPICard title="Avg Lead Time" value="3.2" suffix="d" change="1.8d" changeType="positive" icon={Clock} gradient="linear-gradient(135deg, #fb923c, #f97316)" />
-                <KPICard title="Best Model" value="96" suffix="%" change="Ensemble" changeType="positive" icon={Award} gradient="linear-gradient(135deg, #f472b6, #e11d48)" />
+                <KPICard title="Forecast Accuracy" value="87" suffix="%" change="4.2%" changeType="positive" icon={Brain} gradient="linear-gradient(135deg, #06b6d4, #3b82f6)" />
+                <KPICard title="Anomalies Detected" value="14" change="3 new" changeType="negative" icon={Activity} gradient="linear-gradient(135deg, #ef4444, #f59e0b)" />
+                <KPICard title="Avg Lead Time" value="3.2" suffix="d" change="1.8d" changeType="positive" icon={Clock} gradient="linear-gradient(135deg, #8b5cf6, #6366f1)" />
+                <KPICard title="Best Model" value="96" suffix="%" change="Ensemble" changeType="positive" icon={Award} gradient="linear-gradient(135deg, #10b981, #14b8a6)" />
             </div>
 
             {/* Horizon Selector */}
@@ -107,9 +107,9 @@ export default function Forecasting() {
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
                         <Line type="monotone" dataKey="actual" stroke="#f1f5f9" strokeWidth={2.5} dot={{ r: 4 }} name="Actual" />
-                        <Line type="monotone" dataKey="arima" stroke="#fbbf24" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="ARIMA" />
-                        <Line type="monotone" dataKey="xgboost" stroke="#f43f5e" strokeWidth={1.5} dot={false} name="XGBoost" />
-                        <Line type="monotone" dataKey="lstm" stroke="#f472b6" strokeWidth={1.5} dot={false} name="LSTM" />
+                        <Line type="monotone" dataKey="arima" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="ARIMA" />
+                        <Line type="monotone" dataKey="xgboost" stroke="#06b6d4" strokeWidth={1.5} dot={false} name="XGBoost" />
+                        <Line type="monotone" dataKey="lstm" stroke="#8b5cf6" strokeWidth={1.5} dot={false} name="LSTM" />
                     </LineChart>
                 </ChartCard>
 
@@ -171,7 +171,7 @@ export default function Forecasting() {
                                         {a.type === 'spike' ? '↑ Spike' : '↓ Drop'}
                                     </span>
                                 </td>
-                                <td style={{ fontWeight: 600, color: a.type === 'spike' ? '#e11d48' : '#fbbf24' }}>{a.magnitude}</td>
+                                <td style={{ fontWeight: 600, color: a.type === 'spike' ? '#f87171' : '#fbbf24' }}>{a.magnitude}</td>
                                 <td>{a.confidence}</td>
                                 <td>
                                     <span className={`badge ${a.status === 'confirmed' ? 'badge-danger' : a.status === 'resolved' ? 'badge-success' : 'badge-warning'}`}>

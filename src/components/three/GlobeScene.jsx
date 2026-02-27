@@ -32,7 +32,7 @@ function Globe() {
             <mesh ref={wireRef}>
                 <sphereGeometry args={[2.01, 32, 32]} />
                 <meshStandardMaterial
-                    color="#f43f5e"
+                    color="#06b6d4"
                     wireframe
                     transparent
                     opacity={0.15}
@@ -42,10 +42,10 @@ function Globe() {
             <mesh rotation={[Math.PI / 2, 0, 0]}>
                 <ringGeometry args={[2.2, 2.25, 128]} />
                 <meshStandardMaterial
-                    color="#f43f5e"
+                    color="#06b6d4"
                     transparent
                     opacity={0.3}
-                    emissive="#f43f5e"
+                    emissive="#06b6d4"
                     emissiveIntensity={0.5}
                 />
             </mesh>
@@ -53,7 +53,7 @@ function Globe() {
     )
 }
 
-function ConnectionArc({ from, to, color = '#f43f5e' }) {
+function ConnectionArc({ from, to, color = '#06b6d4' }) {
     const lineRef = useRef()
 
     const curve = useMemo(() => {
@@ -81,7 +81,7 @@ function ConnectionArc({ from, to, color = '#f43f5e' }) {
     )
 }
 
-function WarehousePoint({ position, color = '#f43f5e' }) {
+function WarehousePoint({ position, color = '#06b6d4' }) {
     const meshRef = useRef()
 
     useFrame((state) => {
@@ -125,14 +125,14 @@ function latLonToXYZ(lat, lon, radius = 2.05) {
 
 function Scene() {
     const warehouses = useMemo(() => [
-        { lat: 40.7, lon: -74, color: '#f43f5e' },   // New York
-        { lat: 51.5, lon: -0.1, color: '#f472b6' },   // London
-        { lat: 35.7, lon: 139.7, color: '#f97316' },   // Tokyo
-        { lat: 1.35, lon: 103.8, color: '#fbbf24' },   // Singapore
-        { lat: -33.9, lon: 151.2, color: '#e11d48' },   // Sydney
-        { lat: 19.1, lon: 72.9, color: '#f472b6' },    // Mumbai
-        { lat: 37.6, lon: -122.4, color: '#fb923c' },   // San Francisco
-        { lat: 55.8, lon: 37.6, color: '#e11d48' },    // Moscow
+        { lat: 40.7, lon: -74, color: '#06b6d4' },   // New York
+        { lat: 51.5, lon: -0.1, color: '#8b5cf6' },   // London
+        { lat: 35.7, lon: 139.7, color: '#f59e0b' },   // Tokyo
+        { lat: 1.35, lon: 103.8, color: '#10b981' },   // Singapore
+        { lat: -33.9, lon: 151.2, color: '#ef4444' },   // Sydney
+        { lat: 19.1, lon: 72.9, color: '#3b82f6' },    // Mumbai
+        { lat: 37.6, lon: -122.4, color: '#14b8a6' },   // San Francisco
+        { lat: 55.8, lon: 37.6, color: '#6366f1' },    // Moscow
     ], [])
 
     const positions = useMemo(
@@ -147,8 +147,8 @@ function Scene() {
     return (
         <>
             <ambientLight intensity={0.3} />
-            <pointLight position={[5, 5, 5]} intensity={0.5} color="#f43f5e" />
-            <pointLight position={[-5, 3, -5]} intensity={0.3} color="#f472b6" />
+            <pointLight position={[5, 5, 5]} intensity={0.5} color="#06b6d4" />
+            <pointLight position={[-5, 3, -5]} intensity={0.3} color="#8b5cf6" />
 
             <Globe />
 

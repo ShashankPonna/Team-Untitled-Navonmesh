@@ -6,12 +6,12 @@ import GlobeScene from '../components/three/GlobeScene'
 import { Canvas3DErrorBoundary } from '../components/ui/ErrorBoundary'
 
 const warehouses = [
-    { name: 'New York DC', code: 'NYC', stock: 8500, capacity: 12000, daysOfSupply: 14, skus: 3200, status: 'healthy', color: '#f43f5e' },
-    { name: 'London Warehouse', code: 'LON', stock: 6200, capacity: 10000, daysOfSupply: 18, skus: 2800, status: 'healthy', color: '#f472b6' },
-    { name: 'Tokyo Hub', code: 'TKY', stock: 9800, capacity: 11000, daysOfSupply: 11, skus: 4100, status: 'attention', color: '#f97316' },
-    { name: 'Singapore DC', code: 'SGP', stock: 4300, capacity: 8000, daysOfSupply: 22, skus: 1900, status: 'healthy', color: '#fbbf24' },
-    { name: 'Mumbai Warehouse', code: 'BOM', stock: 7100, capacity: 9000, daysOfSupply: 9, skus: 2600, status: 'critical', color: '#f472b6' },
-    { name: 'Sydney DC', code: 'SYD', stock: 3800, capacity: 6000, daysOfSupply: 16, skus: 1500, status: 'healthy', color: '#e11d48' },
+    { name: 'New York DC', code: 'NYC', stock: 8500, capacity: 12000, daysOfSupply: 14, skus: 3200, status: 'healthy', color: '#06b6d4' },
+    { name: 'London Warehouse', code: 'LON', stock: 6200, capacity: 10000, daysOfSupply: 18, skus: 2800, status: 'healthy', color: '#8b5cf6' },
+    { name: 'Tokyo Hub', code: 'TKY', stock: 9800, capacity: 11000, daysOfSupply: 11, skus: 4100, status: 'attention', color: '#f59e0b' },
+    { name: 'Singapore DC', code: 'SGP', stock: 4300, capacity: 8000, daysOfSupply: 22, skus: 1900, status: 'healthy', color: '#10b981' },
+    { name: 'Mumbai Warehouse', code: 'BOM', stock: 7100, capacity: 9000, daysOfSupply: 9, skus: 2600, status: 'critical', color: '#ef4444' },
+    { name: 'Sydney DC', code: 'SYD', stock: 3800, capacity: 6000, daysOfSupply: 16, skus: 1500, status: 'healthy', color: '#3b82f6' },
 ]
 
 const redistributions = [
@@ -31,10 +31,10 @@ export default function Warehouses() {
             </div>
 
             <div className="kpi-grid">
-                <KPICard title="Total Warehouses" value="6" change="2 regions" changeType="positive" icon={Building2} gradient="linear-gradient(135deg, #f43f5e, #f472b6)" />
-                <KPICard title="Total Stock Units" value="39700" change="3.2% up" changeType="positive" icon={MapPin} gradient="linear-gradient(135deg, #f97316, #fb923c)" />
-                <KPICard title="In-Transit Shipments" value="14" change="5 arriving soon" changeType="positive" icon={Truck} gradient="linear-gradient(135deg, #f472b6, #e11d48)" />
-                <KPICard title="Rebalance Savings" value="29" suffix="K" change="$29.5K monthly" changeType="positive" icon={ArrowRightLeft} gradient="linear-gradient(135deg, #fbbf24, #e11d48)" />
+                <KPICard title="Total Warehouses" value="6" change="2 regions" changeType="positive" icon={Building2} gradient="linear-gradient(135deg, #06b6d4, #3b82f6)" />
+                <KPICard title="Total Stock Units" value="39700" change="3.2% up" changeType="positive" icon={MapPin} gradient="linear-gradient(135deg, #8b5cf6, #6366f1)" />
+                <KPICard title="In-Transit Shipments" value="14" change="5 arriving soon" changeType="positive" icon={Truck} gradient="linear-gradient(135deg, #10b981, #14b8a6)" />
+                <KPICard title="Rebalance Savings" value="29" suffix="K" change="$29.5K monthly" changeType="positive" icon={ArrowRightLeft} gradient="linear-gradient(135deg, #f59e0b, #ef4444)" />
             </div>
 
             {/* 3D Globe */}
@@ -84,7 +84,7 @@ export default function Warehouses() {
                                     fontWeight: 700,
                                     fontFamily: 'Outfit',
                                     fontSize: '1.1rem',
-                                    color: wh.daysOfSupply <= 10 ? '#e11d48' : wh.daysOfSupply <= 14 ? '#fbbf24' : '#f97316',
+                                    color: wh.daysOfSupply <= 10 ? '#f87171' : wh.daysOfSupply <= 14 ? '#fbbf24' : '#34d399',
                                 }}>
                                     {wh.daysOfSupply}d
                                 </p>
@@ -140,7 +140,7 @@ export default function Warehouses() {
                                         {r.priority}
                                     </span>
                                 </td>
-                                <td style={{ color: '#f97316', fontWeight: 600 }}>{r.savings}</td>
+                                <td style={{ color: '#34d399', fontWeight: 600 }}>{r.savings}</td>
                             </tr>
                         ))}
                     </tbody>

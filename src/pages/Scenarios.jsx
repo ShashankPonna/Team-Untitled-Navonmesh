@@ -136,30 +136,30 @@ export default function Scenarios() {
 
             {/* Impact Summary */}
             <div className="kpi-grid">
-                <div className="glass-card" style={{ textAlign: 'center', borderTop: `3px solid ${stockoutMonths > 3 ? '#e11d48' : stockoutMonths > 0 ? '#fbbf24' : '#f97316'}` }}>
-                    <AlertTriangle size={24} color={stockoutMonths > 3 ? '#e11d48' : stockoutMonths > 0 ? '#fbbf24' : '#f97316'} style={{ marginBottom: 8 }} />
-                    <p style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Outfit', color: stockoutMonths > 3 ? '#e11d48' : stockoutMonths > 0 ? '#fbbf24' : '#f97316' }}>
+                <div className="glass-card" style={{ textAlign: 'center', borderTop: `3px solid ${stockoutMonths > 3 ? '#ef4444' : stockoutMonths > 0 ? '#f59e0b' : '#10b981'}` }}>
+                    <AlertTriangle size={24} color={stockoutMonths > 3 ? '#f87171' : stockoutMonths > 0 ? '#fbbf24' : '#34d399'} style={{ marginBottom: 8 }} />
+                    <p style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Outfit', color: stockoutMonths > 3 ? '#f87171' : stockoutMonths > 0 ? '#fbbf24' : '#34d399' }}>
                         {stockoutMonths}
                     </p>
                     <p style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stockout Months</p>
                 </div>
-                <div className="glass-card" style={{ textAlign: 'center', borderTop: `3px solid ${avgGap < 0 ? '#e11d48' : '#f97316'}` }}>
-                    <TrendingUp size={24} color={avgGap < 0 ? '#e11d48' : '#f97316'} style={{ marginBottom: 8 }} />
-                    <p style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Outfit', color: avgGap < 0 ? '#e11d48' : '#f97316' }}>
+                <div className="glass-card" style={{ textAlign: 'center', borderTop: `3px solid ${avgGap < 0 ? '#ef4444' : '#10b981'}` }}>
+                    <TrendingUp size={24} color={avgGap < 0 ? '#f87171' : '#34d399'} style={{ marginBottom: 8 }} />
+                    <p style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Outfit', color: avgGap < 0 ? '#f87171' : '#34d399' }}>
                         {avgGap > 0 ? '+' : ''}{avgGap.toLocaleString()}
                     </p>
                     <p style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Stock Gap</p>
                 </div>
-                <div className="glass-card" style={{ textAlign: 'center', borderTop: '3px solid #e11d48' }}>
-                    <Shield size={24} color="#e11d48" style={{ marginBottom: 8 }} />
-                    <p style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Outfit', color: '#e11d48' }}>
+                <div className="glass-card" style={{ textAlign: 'center', borderTop: '3px solid #ef4444' }}>
+                    <Shield size={24} color="#f87171" style={{ marginBottom: 8 }} />
+                    <p style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Outfit', color: '#f87171' }}>
                         {worstMonth.month}
                     </p>
                     <p style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Worst Month ({worstMonth.gap.toLocaleString()})</p>
                 </div>
-                <div className="glass-card" style={{ textAlign: 'center', borderTop: '3px solid #f472b6' }}>
-                    <FlaskConical size={24} color="#f472b6" style={{ marginBottom: 8 }} />
-                    <p style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Outfit', color: '#f472b6' }}>
+                <div className="glass-card" style={{ textAlign: 'center', borderTop: '3px solid #8b5cf6' }}>
+                    <FlaskConical size={24} color="#a78bfa" style={{ marginBottom: 8 }} />
+                    <p style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Outfit', color: '#a78bfa' }}>
                         {Math.round((stockoutMonths / 12) * 100)}%
                     </p>
                     <p style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Risk Score</p>
@@ -172,12 +172,12 @@ export default function Scenarios() {
                     <AreaChart data={scenarioData}>
                         <defs>
                             <linearGradient id="baseGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#f472b6" stopOpacity={0.3} />
-                                <stop offset="100%" stopColor="#f472b6" stopOpacity={0} />
+                                <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                                <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="scenarioGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#e11d48" stopOpacity={0.3} />
-                                <stop offset="100%" stopColor="#e11d48" stopOpacity={0} />
+                                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3} />
+                                <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
                             </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" />
@@ -185,8 +185,8 @@ export default function Scenarios() {
                         <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
-                        <Area type="monotone" dataKey="baseline" stroke="#f472b6" fill="url(#baseGrad)" strokeWidth={2} name="Baseline Demand" />
-                        <Area type="monotone" dataKey="scenarioDemand" stroke="#e11d48" fill="url(#scenarioGrad)" strokeWidth={2} name="Scenario Demand" />
+                        <Area type="monotone" dataKey="baseline" stroke="#8b5cf6" fill="url(#baseGrad)" strokeWidth={2} name="Baseline Demand" />
+                        <Area type="monotone" dataKey="scenarioDemand" stroke="#ef4444" fill="url(#scenarioGrad)" strokeWidth={2} name="Scenario Demand" />
                     </AreaChart>
                 </ChartCard>
 
@@ -201,10 +201,10 @@ export default function Scenarios() {
                             dataKey="gap"
                             name="Stock Gap"
                             radius={[4, 4, 0, 0]}
-                            fill="#f43f5e"
+                            fill="#06b6d4"
                         >
                             {scenarioData.map((entry, idx) => (
-                                <rect key={idx} fill={entry.gap < 0 ? '#e11d48' : '#f97316'} />
+                                <rect key={idx} fill={entry.gap < 0 ? '#ef4444' : '#10b981'} />
                             ))}
                         </Bar>
                     </BarChart>

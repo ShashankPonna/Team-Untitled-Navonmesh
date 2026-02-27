@@ -5,61 +5,52 @@
 
 /* ── CSS Custom Properties ──────────────────────────────────── */
 :root {
-  /* Crimson Eclipse - Premium Dark Theme */
-  --bg-primary: #050505;
-  --bg-secondary: #0f0f11;
-  --bg-tertiary: #18181b;
-  --bg-card: rgba(24, 24, 27, 0.7);
-  --bg-card-hover: rgba(39, 39, 42, 0.85);
-  --bg-glass: rgba(24, 24, 27, 0.4);
+  /* Premium Dark Theme */
+  --bg-primary: #0a0a12;
+  --bg-secondary: #111118;
+  --bg-tertiary: #1a1a24;
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.07);
+  --bg-glass: rgba(255, 255, 255, 0.03);
 
-  /* Text colors for contrast */
-  --text-primary: #fff1f2;
-  --text-secondary: #fecdd3;
-  --text-tertiary: #fda4af;
-  --text-accent: #fb7185;
+  /* Text colors — high contrast on dark backgrounds */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-accent: #22d3ee;
 
-  /* Accent Palette Reimagined */
-  --accent-cyan: #f43f5e;
-  /* Mapped to Rose */
-  --accent-teal: #fb923c;
-  /* Mapped to Orange */
-  --accent-purple: #c084fc;
-  /* Kept Purple but lighter */
-  --accent-blue: #a8a29e;
-  /* Mapped to Warm Gray */
-  --accent-pink: #f472b6;
-  /* Pink */
-  --accent-amber: #fbbf24;
-  /* Amber */
-  --accent-emerald: #f97316;
-  /* Mapped to bright Orange */
-  --accent-red: #e11d48;
-  /* Deep Crimson */
+  /* Vibrant Accent Palette */
+  --accent-cyan: #06b6d4;
+  --accent-teal: #14b8a6;
+  --accent-blue: #3b82f6;
+  --accent-indigo: #6366f1;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
 
-  /* Gradients - Sunset aesthetic */
-  --gradient-primary: linear-gradient(135deg, #f43f5e, #fb923c);
-  --gradient-warm: linear-gradient(135deg, #fbbf24, #f43f5e);
-  --gradient-cool: linear-gradient(135deg, #c084fc, #f472b6);
-  --gradient-danger: linear-gradient(135deg, #e11d48, #9f1239);
-  --gradient-bg: radial-gradient(ellipse at 20% 50%, rgba(244, 63, 94, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(251, 146, 60, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(192, 132, 252, 0.05) 0%, transparent 50%);
+  /* Gradients — Vibrant on dark */
+  --gradient-primary: linear-gradient(135deg, #06b6d4, #3b82f6);
+  --gradient-warm: linear-gradient(135deg, #8b5cf6, #6366f1);
+  --gradient-cool: linear-gradient(135deg, #14b8a6, #06b6d4);
+  --gradient-danger: linear-gradient(135deg, #ef4444, #dc2626);
+  --gradient-bg: radial-gradient(ellipse at 20% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
 
   /* Animated background gradient */
-  --gradient-bg-animated: linear-gradient(45deg, #050505, #1a0b12, #18081c, #140b07, #050505);
+  --gradient-bg-animated: linear-gradient(45deg, #0a0a12, #111118, #0d1117, #0f0f1a, #0a0a12);
 
   /* Borders */
-  --border-primary: rgba(254, 205, 211, 0.15);
-  --border-hover: rgba(244, 63, 94, 0.3);
-  --border-accent: rgba(244, 63, 94, 0.5);
+  --border-primary: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(6, 182, 212, 0.4);
+  --border-accent: rgba(6, 182, 212, 0.6);
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.8);
-  --shadow-glow: 0 0 20px rgba(244, 63, 94, 0.15);
-  --shadow-glow-purple: 0 0 20px rgba(192, 132, 252, 0.15);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.2);
+  --shadow-glow-blue: 0 0 20px rgba(59, 130, 246, 0.2);
 
   /* Typography */
   --font-display: 'Outfit', sans-serif;
@@ -124,9 +115,9 @@ body::after {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(14, 165, 233, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(16, 185, 129, 0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 60% 10%, rgba(168, 85, 247, 0.07) 0%, transparent 55%);
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(6, 182, 212, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 60% 10%, rgba(99, 102, 241, 0.04) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
 }
@@ -271,10 +262,7 @@ a:hover {
 }
 
 .page-header h1 {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -305,25 +293,25 @@ a:hover {
 
 .badge-success {
   background: rgba(16, 185, 129, 0.15);
-  color: var(--accent-emerald);
+  color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .badge-warning {
   background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-amber);
+  color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .badge-danger {
   background: rgba(239, 68, 68, 0.15);
-  color: var(--accent-red);
+  color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .badge-info {
   background: rgba(6, 182, 212, 0.15);
-  color: var(--accent-cyan);
+  color: #22d3ee;
   border: 1px solid rgba(6, 182, 212, 0.3);
 }
 
@@ -351,7 +339,7 @@ a:hover {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
 }
 
 .btn-secondary {
@@ -386,7 +374,8 @@ a:hover {
 .data-table tbody td {
   padding: 14px 16px;
   font-size: 0.9rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.05);
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   transition: background var(--transition-fast);
 }
 
@@ -478,12 +467,7 @@ a:hover {
   text-align: center;
   margin-bottom: 20px;
 
-  /* Same gradient as rest of app */
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  color: var(--text-primary);
 
   /* Prevent layout shift while empty */
   min-height: 1.15em;
@@ -493,7 +477,7 @@ a:hover {
   display: inline-block;
   width: 3px;
   height: 0.85em;
-  background: linear-gradient(180deg, #22d3ee, #c084fc);
+  background: linear-gradient(180deg, #06b6d4, #3b82f6);
   border-radius: 2px;
   margin-left: 4px;
   vertical-align: middle;
@@ -529,7 +513,7 @@ a:hover {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, rgba(1, 4, 9, 0.2) 0%, rgba(1, 4, 9, 0.75) 70%);
+  background: radial-gradient(ellipse at center, rgba(10, 10, 18, 0.3) 0%, rgba(10, 10, 18, 0.92) 70%);
   z-index: 1;
   pointer-events: none;
 }
@@ -603,6 +587,7 @@ a:hover {
 .feature-card h3 {
   font-size: 1.15rem;
   margin-bottom: 8px;
+  color: var(--text-primary);
 }
 
 .feature-card p {
@@ -695,23 +680,24 @@ a:hover {
 
 .alert-icon.critical {
   background: rgba(239, 68, 68, 0.15);
-  color: var(--accent-red);
+  color: #f87171;
 }
 
 .alert-icon.warning {
   background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-amber);
+  color: #fbbf24;
 }
 
 .alert-icon.info {
   background: rgba(6, 182, 212, 0.15);
-  color: var(--accent-cyan);
+  color: #22d3ee;
 }
 
 .alert-content h4 {
   font-size: 0.95rem;
   font-weight: 600;
   margin-bottom: 2px;
+  color: var(--text-primary);
 }
 
 .alert-content p {
