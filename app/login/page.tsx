@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Boxes, Loader2, KeyRound } from "lucide-react"
+import { Boxes, Loader2 } from "lucide-react"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -49,24 +49,7 @@ export default function LoginPage() {
         }
     }
 
-    // Direct access helper
-    const handleDemoAccess = async () => {
-        setLoading(true)
-        setError("")
-        try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email: "admin@optistock.ai",
-                password: "password123",
-            })
-            if (error) throw error
-            router.push("/dashboard")
-            router.refresh()
-        } catch (err: any) {
-            setError(err.message || "Failed to authenticate.")
-        } finally {
-            setLoading(false)
-        }
-    }
+
 
     return (
         <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
@@ -117,12 +100,6 @@ export default function LoginPage() {
                         {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                         {isLogin ? "Sign In" : "Sign Up"}
                     </Button>
-
-                    {isLogin && (
-                        <Button type="button" variant="outline" disabled={loading} onClick={handleDemoAccess} className="w-full h-11 mt-2 text-primary gap-2">
-                            <KeyRound className="w-4 h-4" /> Direct Access
-                        </Button>
-                    )}
                 </form>
 
                 <div className="mt-6 text-center">
