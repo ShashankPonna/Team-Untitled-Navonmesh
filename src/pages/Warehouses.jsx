@@ -1,26 +1,60 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Building2, MapPin, Truck, ArrowRightLeft } from 'lucide-react'
+import { getWarehousesOverview, getRedistributionRecommendations, approveTransfer, rejectTransfer } from '../services/warehouseService'
+import { Building2, Package, ArrowRightLeft, Check, X, Loader2, MapPin, Truck } from 'lucide-react'
 import AnimatedPage from '../components/ui/AnimatedPage'
 import KPICard from '../components/ui/KPICard'
 import GlobeScene from '../components/three/GlobeScene'
 import { Canvas3DErrorBoundary } from '../components/ui/ErrorBoundary'
 
-const warehouses = [
-    { name: 'New York DC', code: 'NYC', stock: 8500, capacity: 12000, daysOfSupply: 14, skus: 3200, status: 'healthy', color: '#06b6d4' },
-    { name: 'London Warehouse', code: 'LON', stock: 6200, capacity: 10000, daysOfSupply: 18, skus: 2800, status: 'healthy', color: '#8b5cf6' },
-    { name: 'Tokyo Hub', code: 'TKY', stock: 9800, capacity: 11000, daysOfSupply: 11, skus: 4100, status: 'attention', color: '#f59e0b' },
-    { name: 'Singapore DC', code: 'SGP', stock: 4300, capacity: 8000, daysOfSupply: 22, skus: 1900, status: 'healthy', color: '#10b981' },
-    { name: 'Mumbai Warehouse', code: 'BOM', stock: 7100, capacity: 9000, daysOfSupply: 9, skus: 2600, status: 'critical', color: '#ef4444' },
-    { name: 'Sydney DC', code: 'SYD', stock: 3800, capacity: 6000, daysOfSupply: 16, skus: 1500, status: 'healthy', color: '#3b82f6' },
-]
-
-const redistributions = [
-    { from: 'London', to: 'Mumbai', skus: 12, units: 2400, reason: 'Stockout prevention', priority: 'high', savings: '$18,200' },
-    { from: 'Singapore', to: 'Tokyo', skus: 5, units: 800, reason: 'Demand surge', priority: 'medium', savings: '$6,500' },
-    { from: 'NYC', to: 'Sydney', skus: 8, units: 1200, reason: 'Seasonal balancing', priority: 'low', savings: '$4,800' },
-]
-
+// Dynamic state replaces static arrays
 export default function Warehouses() {
+    const [whs, setWhs] = useState([])
+    const [recs, setRecs] = useState([])
+    const [stats, setStats] = useState({ totalNodes: 0, totalUnits: 0, trackingLoad: 0, estSavings: 0 })
+    const [processingIds, setProcessingIds] = useState([])
+
+    const handleAction = async (id, action) => {
+        setProcessingIds(prev => [...prev, id])
+        try {
+            if (action === 'approve') await approveTransfer(id)
+            if (action === 'reject') await rejectTransfer(id)
+            setRecs(prev => prev.filter(r => r.id !== id))
+        } catch (error) {
+            console.error('Action failed', error)
+        } finally {
+            setProcessingIds(prev => prev.filter(pId => pId !== id))
+        }
+    }
+
+    useEffect(() => {
+        async function fetchWHData() {
+            try {
+                const wData = await getWarehousesOverview()
+                setWhs(wData)
+
+                const rData = await getRedistributionRecommendations()
+                setRecs(rData)
+
+                const totalUnits = wData.reduce((sum, w) => sum + w.totalItems, 0)
+                const savingsEstimate = rData.reduce((sum, r) => {
+                    const strVal = r.savings.replace(/\D/g, '') || 0
+                    return sum + parseInt(strVal, 10)
+                }, 0)
+
+                setStats({
+                    totalNodes: wData.length,
+                    totalUnits,
+                    trackingLoad: rData.length * 2,
+                    estSavings: savingsEstimate || 29
+                })
+            } catch (error) {
+                console.error('Error loading warehouse data', error)
+            }
+        }
+        fetchWHData()
+    }, [])
+
     const util = (s, c) => Math.round((s / c) * 100)
 
     return (
@@ -31,10 +65,10 @@ export default function Warehouses() {
             </div>
 
             <div className="kpi-grid">
-                <KPICard title="Total Warehouses" value="6" change="2 regions" changeType="positive" icon={Building2} gradient="linear-gradient(135deg, #06b6d4, #3b82f6)" />
-                <KPICard title="Total Stock Units" value="39700" change="3.2% up" changeType="positive" icon={MapPin} gradient="linear-gradient(135deg, #8b5cf6, #6366f1)" />
-                <KPICard title="In-Transit Shipments" value="14" change="5 arriving soon" changeType="positive" icon={Truck} gradient="linear-gradient(135deg, #10b981, #14b8a6)" />
-                <KPICard title="Rebalance Savings" value="29" suffix="K" change="$29.5K monthly" changeType="positive" icon={ArrowRightLeft} gradient="linear-gradient(135deg, #f59e0b, #ef4444)" />
+                <KPICard title="Total Warehouses" value={stats.totalNodes} change="Active" changeType="positive" icon={Building2} gradient="linear-gradient(135deg, #06b6d4, #3b82f6)" />
+                <KPICard title="Total Stock Units" value={stats.totalUnits.toLocaleString()} change="Current tracking" changeType="positive" icon={MapPin} gradient="linear-gradient(135deg, #8b5cf6, #6366f1)" />
+                <KPICard title="In-Transit Transfers" value={stats.trackingLoad} change="Active queues" changeType="positive" icon={Truck} gradient="linear-gradient(135deg, #10b981, #14b8a6)" />
+                <KPICard title="Rebalance Savings" value={stats.estSavings} suffix="K" change="Est. monthly" changeType="positive" icon={ArrowRightLeft} gradient="linear-gradient(135deg, #f59e0b, #ef4444)" />
             </div>
 
             {/* 3D Globe */}
@@ -52,63 +86,69 @@ export default function Warehouses() {
 
             {/* Warehouse Cards */}
             <div className="warehouse-grid" style={{ marginBottom: 28 }}>
-                {warehouses.map((wh, i) => (
-                    <motion.div
-                        key={i}
-                        className="glass-card"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: i * 0.08 }}
-                        whileHover={{ scale: 1.02 }}
-                    >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                            <div>
-                                <h4 style={{ fontSize: '1rem', fontFamily: 'Outfit, sans-serif' }}>{wh.name}</h4>
-                                <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{wh.code}</p>
+                {whs.length === 0 && <p style={{ opacity: 0.5 }}>No warehouse locations assigned.</p>}
+                {whs.map((wh, i) => {
+                    const wColor = wh.utilization > 85 ? '#f59e0b' : wh.utilization > 95 ? '#ef4444' : '#06b6d4'
+                    const wStatus = wh.utilization > 85 ? 'attention' : wh.utilization > 95 ? 'critical' : 'healthy'
+                    const scBadge = wStatus === 'healthy' ? 'badge-success' : wStatus === 'attention' ? 'badge-warning' : 'badge-danger'
+                    return (
+                        <motion.div
+                            key={i}
+                            className="glass-card"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: i * 0.08 }}
+                            whileHover={{ scale: 1.02 }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                <div>
+                                    <h4 style={{ fontSize: '1rem', fontFamily: 'Outfit, sans-serif' }}>{wh.name}</h4>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{wh.code} — {wh.location}</p>
+                                </div>
+                                <span className={`badge ${scBadge}`}>
+                                    {wStatus}
+                                </span>
                             </div>
-                            <span className={`badge ${wh.status === 'healthy' ? 'badge-success' : wh.status === 'attention' ? 'badge-warning' : 'badge-danger'}`}>
-                                {wh.status}
-                            </span>
-                        </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                            <div>
-                                <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stock / Capacity</p>
-                                <p style={{ fontWeight: 700, fontFamily: 'Outfit', fontSize: '1.1rem' }}>
-                                    {wh.stock.toLocaleString()} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400, fontSize: '0.85rem' }}>/ {wh.capacity.toLocaleString()}</span>
-                                </p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                                <div>
+                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stock / Capacity</p>
+                                    <p style={{ fontWeight: 700, fontFamily: 'Outfit', fontSize: '1.1rem' }}>
+                                        {wh.totalItems.toLocaleString()} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400, fontSize: '0.85rem' }}>/ {wh.capacity.toLocaleString()}</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</p>
+                                    <p style={{
+                                        fontWeight: 700,
+                                        fontFamily: 'Outfit',
+                                        fontSize: '1.1rem',
+                                        textTransform: 'capitalize'
+                                    }}>
+                                        {wh.status}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Days of Supply</p>
-                                <p style={{
-                                    fontWeight: 700,
-                                    fontFamily: 'Outfit',
-                                    fontSize: '1.1rem',
-                                    color: wh.daysOfSupply <= 10 ? '#f87171' : wh.daysOfSupply <= 14 ? '#fbbf24' : '#34d399',
-                                }}>
-                                    {wh.daysOfSupply}d
-                                </p>
-                            </div>
-                        </div>
 
-                        {/* Utilization bar */}
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                <span>Utilization</span>
-                                <span style={{ color: wh.color, fontWeight: 600 }}>{util(wh.stock, wh.capacity)}%</span>
+                            {/* Utilization bar */}
+                            <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                    <span>Utilization</span>
+                                    <span style={{ color: wColor, fontWeight: 600 }}>{wh.utilization}%</span>
+                                </div>
+                                <div className="gauge-bar">
+                                    <div
+                                        className="gauge-fill"
+                                        style={{
+                                            width: `${Math.min(wh.utilization, 100)}%`,
+                                            background: `linear-gradient(90deg, ${wColor}, ${wColor}80)`,
+                                        }}
+                                    />
+                                </div>
                             </div>
-                            <div className="gauge-bar">
-                                <div
-                                    className="gauge-fill"
-                                    style={{
-                                        width: `${util(wh.stock, wh.capacity)}%`,
-                                        background: `linear-gradient(90deg, ${wh.color}, ${wh.color}80)`,
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </motion.div>
-                ))}
+                        </motion.div>
+                    )
+                })}
             </div>
 
             {/* Redistribution Recommendations */}
@@ -125,24 +165,55 @@ export default function Warehouses() {
                             <th>Reason</th>
                             <th>Priority</th>
                             <th>Est. Savings</th>
+                            <th style={{ textAlign: 'right' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {redistributions.map((r, i) => (
-                            <tr key={i}>
-                                <td style={{ fontWeight: 600 }}>{r.from}</td>
-                                <td style={{ fontWeight: 600 }}>→ {r.to}</td>
-                                <td>{r.skus}</td>
-                                <td>{r.units.toLocaleString()}</td>
-                                <td style={{ color: 'var(--text-secondary)' }}>{r.reason}</td>
-                                <td>
-                                    <span className={`badge ${r.priority === 'high' ? 'badge-danger' : r.priority === 'medium' ? 'badge-warning' : 'badge-info'}`}>
-                                        {r.priority}
-                                    </span>
-                                </td>
-                                <td style={{ color: '#34d399', fontWeight: 600 }}>{r.savings}</td>
-                            </tr>
-                        ))}
+                        {recs.length === 0 && (
+                            <tr><td colSpan="8" style={{ textAlign: 'center', opacity: 0.5 }}>Network balanced. No current redistributions required.</td></tr>
+                        )}
+                        {recs.map((r, i) => {
+                            const isProcessing = processingIds.includes(r.id)
+                            return (
+                                <tr key={r.id || i}>
+                                    <td style={{ fontWeight: 600 }}>{r.from}</td>
+                                    <td style={{ fontWeight: 600 }}>→ {r.to}</td>
+                                    <td><span style={{ color: 'var(--accent-cyan)' }}>{r.sku}</span></td>
+                                    <td>{r.qty.toLocaleString()}</td>
+                                    <td style={{ color: 'var(--text-secondary)' }}>{r.reason}</td>
+                                    <td>
+                                        <span className={`badge ${r.score > 90 ? 'badge-danger' : r.score > 80 ? 'badge-warning' : 'badge-info'}`}>
+                                            {r.score}/100 Conf.
+                                        </span>
+                                    </td>
+                                    <td style={{ color: '#34d399', fontWeight: 600 }}>{r.savings}</td>
+                                    <td style={{ textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                            <button
+                                                onClick={() => handleAction(r.id, 'approve')}
+                                                disabled={isProcessing}
+                                                style={{
+                                                    background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                    color: '#34d399', width: 32, height: 32, borderRadius: 6, cursor: isProcessing ? 'not-allowed' : 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                {isProcessing ? <Loader2 size={16} className="spinner" /> : <Check size={16} />}
+                                            </button>
+                                            <button
+                                                onClick={() => handleAction(r.id, 'reject')}
+                                                disabled={isProcessing}
+                                                style={{
+                                                    background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                                                    color: '#f87171', width: 32, height: 32, borderRadius: 6, cursor: isProcessing ? 'not-allowed' : 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )
+                        })}
                     </tbody>
                 </table>
             </div>

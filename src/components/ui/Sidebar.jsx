@@ -1,10 +1,11 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
     LayoutDashboard, TrendingUp, Package, Building2,
-    Bell, FlaskConical, ChevronLeft, ChevronRight, Boxes, Home
+    Bell, FlaskConical, ChevronLeft, ChevronRight, Boxes, Home, LogOut, Database
 } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 
 const navItems = [
     { path: '/', label: 'Home', icon: Home },
@@ -14,11 +15,18 @@ const navItems = [
     { path: '/warehouses', label: 'Warehouses', icon: Building2 },
     { path: '/alerts', label: 'Alerts', icon: Bell },
     { path: '/scenarios', label: 'Scenarios', icon: FlaskConical },
+    { path: '/data-sync', label: 'Data Sync', icon: Database },
 ]
 
 export default function Sidebar() {
     const [collapsed, setCollapsed] = useState(false)
     const location = useLocation()
+    const navigate = useNavigate()
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut()
+        navigate('/login')
+    }
 
     return (
         <motion.aside
@@ -76,7 +84,7 @@ export default function Sidebar() {
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                         }}>
-                            NavonMesh
+                            StockFlow
                         </div>
                         <div style={{
                             fontSize: '0.65rem',
@@ -157,29 +165,61 @@ export default function Sidebar() {
                 })}
             </nav>
 
-            {/* Collapse Toggle */}
-            <button
-                onClick={() => setCollapsed(!collapsed)}
-                style={{
-                    margin: '12px 8px 16px',
-                    padding: '10px',
-                    borderRadius: 10,
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    color: '#94a3b8',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    fontSize: '0.8rem',
-                    transition: 'all 150ms ease',
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'}
-            >
-                {collapsed ? <ChevronRight size={16} /> : <><ChevronLeft size={16} /> Collapse</>}
-            </button>
+            {/* Logout & Collapse */}
+            <div style={{ padding: '0 8px 16px' }}>
+                <button
+                    onClick={handleLogout}
+                    style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: 10,
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#f87171',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: collapsed ? 'center' : 'flex-start',
+                        gap: 12,
+                        fontSize: '0.9rem',
+                        fontWeight: 500,
+                        transition: 'all 150ms ease',
+                        marginBottom: 8
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.background = 'transparent'
+                    }}
+                >
+                    <LogOut size={20} />
+                    {!collapsed && <span>Sign Out</span>}
+                </button>
+
+                <button
+                    onClick={() => setCollapsed(!collapsed)}
+                    style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: 10,
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        color: '#94a3b8',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        fontSize: '0.8rem',
+                        transition: 'all 150ms ease',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'}
+                >
+                    {collapsed ? <ChevronRight size={16} /> : <><ChevronLeft size={16} /> Collapse</>}
+                </button>
+            </div>
         </motion.aside>
     )
 }

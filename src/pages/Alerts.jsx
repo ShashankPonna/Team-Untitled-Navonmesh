@@ -1,24 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getAllAlerts } from '../services/alertService'
 import {
     AlertTriangle, Clock, CheckCircle2, Info, Bell,
     ShieldAlert, Package, Thermometer, Truck
 } from 'lucide-react'
 import AnimatedPage from '../components/ui/AnimatedPage'
 
-const alertsData = [
-    { id: 1, severity: 'critical', icon: ShieldAlert, title: 'Stockout Imminent: SKU-4821', message: 'Wireless Headphones at NYC warehouse — only 2 days of supply remaining. Auto-PO triggered for 500 units.', time: '5 min ago', category: 'stockout' },
-    { id: 2, severity: 'critical', icon: Thermometer, title: 'Expiry Critical: SKU-7720', message: 'Artisan Bread Loaf expires tomorrow. 120 units at risk. FEFO rotation applied, priority dispatch initiated.', time: '12 min ago', category: 'expiry' },
-    { id: 3, severity: 'warning', icon: Package, title: 'Overstock Alert: SKU-1092', message: 'Organic Coffee Beans at London warehouse — 45 days supply, 350% above optimal. Consider redistribution to Mumbai DC.', time: '28 min ago', category: 'overstock' },
-    { id: 4, severity: 'warning', icon: Thermometer, title: 'Expiry Warning: SKU-3390', message: 'Fresh Salmon Fillet expires in 3 days. 300 units across Singapore DC. FEFO queue updated.', time: '1 hr ago', category: 'expiry' },
-    { id: 5, severity: 'info', icon: CheckCircle2, title: 'Auto-PO Generated: SKU-7734', message: 'Running Shoes — 500 units ordered from supplier. Estimated delivery in 3 business days to Tokyo Hub.', time: '1 hr ago', category: 'replenishment' },
-    { id: 6, severity: 'warning', icon: Truck, title: 'Supplier Delay: PO-2024-0893', message: 'Shipment from Shenzhen Electronics delayed by 2 days. ETA updated. Safety stock buffer activated.', time: '2 hrs ago', category: 'supplier' },
-    { id: 7, severity: 'info', icon: CheckCircle2, title: 'Model Retrained Successfully', message: 'Ensemble forecast model retrained on latest 30-day data. Accuracy improved from 85.1% to 87.2% MAPE.', time: '2 hrs ago', category: 'system' },
-    { id: 8, severity: 'critical', icon: ShieldAlert, title: 'Stockout Risk: SKU-5567', message: 'Smart Watch Pro at Mumbai — 3 days supply. Demand surge detected (+120%). Emergency PO recommended.', time: '3 hrs ago', category: 'stockout' },
-    { id: 9, severity: 'info', icon: Info, title: 'Redistribution Completed', message: 'Transfer of 1,200 units from NYC to Sydney completed. Transit time: 4 days. Stock balanced.', time: '4 hrs ago', category: 'replenishment' },
-    { id: 10, severity: 'warning', icon: Package, title: 'Demand Anomaly Detected: SKU-5567', message: 'Unusual demand spike of +120% for Smart Watch Pro in Mumbai region. Investigation recommended.', time: '5 hrs ago', category: 'anomaly' },
-]
-
+// Data loaded dynamically
 const categories = [
     { key: 'all', label: 'All Alerts' },
     { key: 'stockout', label: 'Stockout' },
@@ -39,6 +28,15 @@ const severityConfig = {
 export default function Alerts() {
     const [filter, setFilter] = useState('all')
     const [severityFilter, setSeverityFilter] = useState('all')
+    const [alertsData, setAlertsData] = useState([])
+
+    useEffect(() => {
+        async function fetchAlerts() {
+            const data = await getAllAlerts()
+            setAlertsData(data)
+        }
+        fetchAlerts()
+    }, [])
 
     const filtered = alertsData.filter(a => {
         if (filter !== 'all' && a.category !== filter) return false

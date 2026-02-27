@@ -1,4 +1,4 @@
-# 🗃️ Intelligent Inventory Optimization Framework
+# 🗃️ StockFlow
 ### Ticket: #26008 | Status: In Development | Version: 1.0
 
 An AI-powered inventory optimization platform that dynamically balances supply and demand, minimizes stockouts and overstock, and improves supply chain efficiency under real-world uncertainty.

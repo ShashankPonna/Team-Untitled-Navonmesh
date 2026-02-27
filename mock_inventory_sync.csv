@@ -1,0 +1,9 @@
+SKU,Product_Name,Warehouse,Stock_Quantity,Reorder_Point,Safety_Stock,Days_of_Supply,Expiry_Date,Batch_Number
+SKU-1001,Premium Colombian Coffee,NYC-Central,1250,500,200,45,2026-12-15,BCH-8821
+SKU-1002,Organic Matcha Powder,NYC-Central,800,300,100,60,2027-03-10,BCH-8822
+SKU-1003,Gourmet Vanilla Beans,LA-West,150,50,25,12,2026-06-30,BCH-9901
+SKU-1004,Cold Brew Concentrate,Chicago-Hub,420,200,80,21,2026-04-15,BCH-7744
+SKU-1005,Artisan Dark Chocolate,NYC-Central,950,400,150,30,2027-01-20,BCH-8823
+SKU-1006,Himalayan Pink Salt,LA-West,2100,500,200,120,2030-01-01,BCH-9902
+SKU-1007,Fresh Almond Milk,Chicago-Hub,85,100,50,4,2026-03-05,BCH-7745
+SKU-1008,Sourdough Bread Loaf,NYC-Central,30,50,20,1,2026-02-28,BCH-8824

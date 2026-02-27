@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { getBaselineScenarioData } from '../services/scenarioService'
 import {
     AreaChart, Area, LineChart, Line, BarChart, Bar,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend
@@ -7,21 +8,8 @@ import { FlaskConical, TrendingUp, AlertTriangle, Shield } from 'lucide-react'
 import AnimatedPage from '../components/ui/AnimatedPage'
 import ChartCard from '../components/ui/ChartCard'
 
-function generateScenarioData(demandSpike, supplyDisruption, leadTimeChange) {
-    const baseData = [
-        { month: 'Jan', baseline: 4200, stock: 5000 },
-        { month: 'Feb', baseline: 4500, stock: 4800 },
-        { month: 'Mar', baseline: 5100, stock: 4600 },
-        { month: 'Apr', baseline: 4800, stock: 4900 },
-        { month: 'May', baseline: 5500, stock: 4400 },
-        { month: 'Jun', baseline: 5200, stock: 4700 },
-        { month: 'Jul', baseline: 5800, stock: 4200 },
-        { month: 'Aug', baseline: 5400, stock: 4500 },
-        { month: 'Sep', baseline: 4900, stock: 4800 },
-        { month: 'Oct', baseline: 5600, stock: 4300 },
-        { month: 'Nov', baseline: 6200, stock: 3900 },
-        { month: 'Dec', baseline: 7000, stock: 3500 },
-    ]
+function generateScenarioData(baseData, demandSpike, supplyDisruption, leadTimeChange) {
+    if (!baseData || !baseData.length) return []
 
     return baseData.map(d => {
         const demandMultiplier = 1 + demandSpike / 100
@@ -68,11 +56,21 @@ export default function Scenarios() {
     const [demandSpike, setDemandSpike] = useState(25)
     const [supplyDisruption, setSupplyDisruption] = useState(15)
     const [leadTimeChange, setLeadTimeChange] = useState(3)
+    const [baseData, setBaseData] = useState([])
+
+    useEffect(() => {
+        async function fetchBase() {
+            setBaseData(await getBaselineScenarioData())
+        }
+        fetchBase()
+    }, [])
 
     const scenarioData = useMemo(
-        () => generateScenarioData(demandSpike, supplyDisruption, leadTimeChange),
-        [demandSpike, supplyDisruption, leadTimeChange]
+        () => generateScenarioData(baseData, demandSpike, supplyDisruption, leadTimeChange),
+        [baseData, demandSpike, supplyDisruption, leadTimeChange]
     )
+
+    if (scenarioData.length === 0) return null
 
     const stockoutMonths = scenarioData.filter(d => d.stockout).length
     const avgGap = Math.round(scenarioData.reduce((acc, d) => acc + d.gap, 0) / scenarioData.length)

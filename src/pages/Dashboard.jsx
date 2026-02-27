@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useState, useEffect } from 'react'
+import { getDashboardKPIs, getWarehouseUtilization, getRecentAlerts } from '../services/dashboardService'
 import {
     AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend
@@ -26,6 +27,7 @@ const demandSupplyData = [
     { day: 'Feb 25', demand: 550, supply: 570, forecast: 540 },
 ]
 
+// Using original mock charts temporarily until historical tables are fully seeded.
 const warehouseData = [
     { name: 'NYC', stock: 8500, capacity: 12000 },
     { name: 'London', stock: 6200, capacity: 10000 },
@@ -43,14 +45,7 @@ const categoryData = [
     { name: 'Other', value: 10, color: '#64748b' },
 ]
 
-const recentAlerts = [
-    { type: 'critical', message: 'Stockout risk: SKU-4821 (NYC) — 2 days supply remaining', time: '5 min ago' },
-    { type: 'warning', message: 'Overstock detected: SKU-1092 (London) — 45 days supply', time: '12 min ago' },
-    { type: 'info', message: 'Auto-PO generated: SKU-7734 (Tokyo) — 500 units ordered', time: '28 min ago' },
-    { type: 'warning', message: 'Expiry alert: SKU-3390 (Singapore) — 3 days until expiration', time: '1 hr ago' },
-    { type: 'info', message: 'Model retrained: Forecast accuracy improved to 87.2%', time: '2 hrs ago' },
-]
-
+// Removed static recent alerts
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
@@ -72,6 +67,39 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Dashboard() {
+    const [kpis, setKpis] = useState({
+        inventoryValue: 0,
+        activeAlerts: 0,
+        autoOrders: 0,
+        forecastAccuracy: 87,
+        stockoutRate: 10.2
+    })
+    const [alerts, setAlerts] = useState([])
+    const [warehouses, setWarehouses] = useState(warehouseData)
+
+    useEffect(() => {
+        async function fetchDashboard() {
+            try {
+                const data = await getDashboardKPIs()
+                setKpis(data)
+
+                const recentAlerts = await getRecentAlerts()
+                if (recentAlerts.length > 0) setAlerts(recentAlerts)
+                else setAlerts([
+                    { type: 'critical', message: 'Stockout risk: SKU-4821 (NYC) — 2 days supply remaining', time: '5 min ago' },
+                    { type: 'warning', message: 'Overstock detected: SKU-1092 (London) — 45 days supply', time: '12 min ago' }
+                ])
+
+                const whData = await getWarehouseUtilization()
+                if (whData.length > 0) setWarehouses(whData)
+
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error)
+            }
+        }
+        fetchDashboard()
+    }, [])
+
     return (
         <AnimatedPage>
             <div className="page-header">
@@ -83,7 +111,7 @@ export default function Dashboard() {
             <div className="kpi-grid">
                 <KPICard
                     title="Stockout Rate"
-                    value="10.2"
+                    value={kpis.stockoutRate}
                     suffix="%"
                     change="7.8%"
                     changeType="positive"
@@ -92,7 +120,7 @@ export default function Dashboard() {
                 />
                 <KPICard
                     title="Forecast Accuracy"
-                    value="87"
+                    value={kpis.forecastAccuracy}
                     suffix="%"
                     change="4.2%"
                     changeType="positive"
@@ -100,19 +128,19 @@ export default function Dashboard() {
                     gradient="linear-gradient(135deg, #06b6d4, #3b82f6)"
                 />
                 <KPICard
-                    title="Inventory Value"
-                    value="2.4"
-                    suffix="M"
-                    change="12%"
+                    title="Inventory Total"
+                    value={kpis.inventoryValue.toLocaleString()}
+                    suffix=""
+                    change=""
                     changeType="negative"
                     icon={DollarSign}
                     gradient="linear-gradient(135deg, #8b5cf6, #6366f1)"
                 />
                 <KPICard
                     title="Auto Orders"
-                    value="68"
-                    suffix="%"
-                    change="18%"
+                    value={kpis.autoOrders}
+                    suffix=""
+                    change=""
                     changeType="positive"
                     icon={Package}
                     gradient="linear-gradient(135deg, #10b981, #14b8a6)"
@@ -145,7 +173,7 @@ export default function Dashboard() {
                 </ChartCard>
 
                 <ChartCard title="Stock by Warehouse" subtitle="Current utilization across distribution nodes">
-                    <BarChart data={warehouseData} barGap={4}>
+                    <BarChart data={warehouses} barGap={4}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" />
                         <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} />
                         <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
@@ -189,10 +217,10 @@ export default function Dashboard() {
                             <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.05rem', marginBottom: 4 }}>Recent Alerts</h4>
                             <p style={{ color: 'var(--text-tertiary)', fontSize: '0.82rem' }}>Latest system notifications</p>
                         </div>
-                        <span className="badge badge-danger" style={{ animation: 'pulse-glow 2s infinite' }}>3 Active</span>
+                        <span className="badge badge-danger" style={{ animation: 'pulse-glow 2s infinite' }}>{kpis.activeAlerts} Active</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-                        {recentAlerts.map((alert, i) => (
+                        {alerts.map((alert, i) => (
                             <div key={i} style={{
                                 display: 'flex',
                                 alignItems: 'flex-start',

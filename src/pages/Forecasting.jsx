@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getForecastData, getForecastModels, getAnomalies } from '../services/forecastingService'
 import {
     LineChart, Line, AreaChart, Area, BarChart, Bar,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend
@@ -8,44 +9,7 @@ import AnimatedPage from '../components/ui/AnimatedPage'
 import KPICard from '../components/ui/KPICard'
 import ChartCard from '../components/ui/ChartCard'
 
-const forecastData = {
-    '7': [
-        { day: 'Mon', arima: 420, xgboost: 435, lstm: 440, actual: 430 },
-        { day: 'Tue', arima: 390, xgboost: 410, lstm: 405, actual: 400 },
-        { day: 'Wed', arima: 480, xgboost: 470, lstm: 485, actual: 475 },
-        { day: 'Thu', arima: 510, xgboost: 520, lstm: 515, actual: 518 },
-        { day: 'Fri', arima: 460, xgboost: 475, lstm: 470, actual: 465 },
-        { day: 'Sat', arima: 550, xgboost: 560, lstm: 555, actual: 558 },
-        { day: 'Sun', arima: 380, xgboost: 390, lstm: 385, actual: 388 },
-    ],
-    '30': [
-        { day: 'W1', arima: 2800, xgboost: 2900, lstm: 2870, actual: 2850 },
-        { day: 'W2', arima: 3100, xgboost: 3050, lstm: 3080, actual: 3060 },
-        { day: 'W3', arima: 2650, xgboost: 2750, lstm: 2700, actual: 2720 },
-        { day: 'W4', arima: 3400, xgboost: 3350, lstm: 3380, actual: 3370 },
-    ],
-    '90': [
-        { day: 'Jan', arima: 12000, xgboost: 12500, lstm: 12300, actual: 12200 },
-        { day: 'Feb', arima: 11500, xgboost: 11800, lstm: 11700, actual: 11600 },
-        { day: 'Mar', arima: 13200, xgboost: 13000, lstm: 13100, actual: 13050 },
-    ],
-}
-
-const anomalies = [
-    { time: '2024-02-15 09:23', sku: 'SKU-4821', type: 'spike', magnitude: '+85%', confidence: '94%', status: 'confirmed' },
-    { time: '2024-02-14 16:12', sku: 'SKU-1092', type: 'drop', magnitude: '-42%', confidence: '88%', status: 'investigating' },
-    { time: '2024-02-14 11:45', sku: 'SKU-7734', type: 'spike', magnitude: '+56%', confidence: '91%', status: 'resolved' },
-    { time: '2024-02-13 20:30', sku: 'SKU-3390', type: 'drop', magnitude: '-31%', confidence: '82%', status: 'confirmed' },
-    { time: '2024-02-13 08:15', sku: 'SKU-5567', type: 'spike', magnitude: '+120%', confidence: '97%', status: 'confirmed' },
-]
-
-const modelLeaderboard = [
-    { model: 'XGBoost', mape: '12.3%', rmse: '45.2', r2: '0.94', status: 'active' },
-    { model: 'LSTM', mape: '13.1%', rmse: '48.7', r2: '0.93', status: 'active' },
-    { model: 'ARIMA', mape: '16.8%', rmse: '52.1', r2: '0.89', status: 'standby' },
-    { model: 'Ensemble', mape: '10.9%', rmse: '40.3', r2: '0.96', status: 'primary' },
-]
-
+// Dynamic state will replace static consts
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
@@ -68,6 +32,39 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function Forecasting() {
     const [horizon, setHorizon] = useState('7')
+    const [forecastSeries, setForecastSeries] = useState([])
+    const [models, setModels] = useState([])
+    const [anomalyList, setAnomalyList] = useState([])
+    const [stats, setStats] = useState({ accuracy: 0, anomalies: 0, leadTime: 0, bestModel: '' })
+
+    useEffect(() => {
+        async function fetchForecastingDashboard() {
+            try {
+                // Number interpretation
+                const hDays = parseInt(horizon)
+
+                const series = await getForecastData(hDays)
+                setForecastSeries(series)
+
+                const mdls = await getForecastModels()
+                setModels(mdls)
+
+                const anoms = await getAnomalies()
+                setAnomalyList(anoms)
+
+                // Simple metric derivation
+                const best = mdls.reduce((prev, current) => (prev.accuracy > current.accuracy) ? prev : current, { accuracy: 0, name: 'None' })
+
+                setStats({
+                    accuracy: best.accuracy?.toFixed(1) || 0,
+                    anomalies: anoms.length,
+                    leadTime: 3.2, // Still mock or calculated via supply chain table
+                    bestModel: best.name?.split(' ')[0] || 'Unknown'
+                })
+            } catch (e) { console.error('Error on forecasting screen:', e) }
+        }
+        fetchForecastingDashboard()
+    }, [horizon])
 
     return (
         <AnimatedPage>
@@ -78,10 +75,10 @@ export default function Forecasting() {
 
             {/* KPIs */}
             <div className="kpi-grid">
-                <KPICard title="Forecast Accuracy" value="87" suffix="%" change="4.2%" changeType="positive" icon={Brain} gradient="linear-gradient(135deg, #06b6d4, #3b82f6)" />
-                <KPICard title="Anomalies Detected" value="14" change="3 new" changeType="negative" icon={Activity} gradient="linear-gradient(135deg, #ef4444, #f59e0b)" />
-                <KPICard title="Avg Lead Time" value="3.2" suffix="d" change="1.8d" changeType="positive" icon={Clock} gradient="linear-gradient(135deg, #8b5cf6, #6366f1)" />
-                <KPICard title="Best Model" value="96" suffix="%" change="Ensemble" changeType="positive" icon={Award} gradient="linear-gradient(135deg, #10b981, #14b8a6)" />
+                <KPICard title="Forecast Accuracy" value={stats.accuracy} suffix="%" change="Calculated" changeType="positive" icon={Brain} gradient="linear-gradient(135deg, #06b6d4, #3b82f6)" />
+                <KPICard title="Anomalies Detected" value={stats.anomalies} change="Since Yesterday" changeType="negative" icon={Activity} gradient="linear-gradient(135deg, #ef4444, #f59e0b)" />
+                <KPICard title="Avg Lead Time" value={stats.leadTime} suffix="d" change="1.8d" changeType="positive" icon={Clock} gradient="linear-gradient(135deg, #8b5cf6, #6366f1)" />
+                <KPICard title="Best Model" value={stats.bestModel} suffix="" change="Auto-selected" changeType="positive" icon={Award} gradient="linear-gradient(135deg, #10b981, #14b8a6)" />
             </div>
 
             {/* Horizon Selector */}
@@ -99,17 +96,16 @@ export default function Forecasting() {
 
             {/* Forecast Chart */}
             <div className="charts-grid">
-                <ChartCard title="Model Comparison" subtitle={`${horizon}-day forecast: ARIMA vs XGBoost vs LSTM vs Actual`}>
-                    <LineChart data={forecastData[horizon]}>
+                <ChartCard title="Model Comparison" subtitle={`${horizon}-day forecast: LSTM vs Prophet vs XGBoost`}>
+                    <LineChart data={forecastSeries}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" />
                         <XAxis dataKey="day" stroke="#64748b" fontSize={12} tickLine={false} />
                         <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
-                        <Line type="monotone" dataKey="actual" stroke="#f1f5f9" strokeWidth={2.5} dot={{ r: 4 }} name="Actual" />
-                        <Line type="monotone" dataKey="arima" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="ARIMA" />
+                        <Line type="monotone" dataKey="lstm" stroke="#8b5cf6" strokeWidth={2.5} dot={false} name="LSTM" />
+                        <Line type="monotone" dataKey="prophet" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="Prophet" />
                         <Line type="monotone" dataKey="xgboost" stroke="#06b6d4" strokeWidth={1.5} dot={false} name="XGBoost" />
-                        <Line type="monotone" dataKey="lstm" stroke="#8b5cf6" strokeWidth={1.5} dot={false} name="LSTM" />
                     </LineChart>
                 </ChartCard>
 
@@ -128,14 +124,17 @@ export default function Forecasting() {
                             </tr>
                         </thead>
                         <tbody>
-                            {modelLeaderboard.map((m, i) => (
+                            {models.length === 0 && (
+                                <tr><td colSpan="5" style={{ textAlign: 'center', opacity: 0.5 }}>No forecast models mapped in system.</td></tr>
+                            )}
+                            {models.map((m, i) => (
                                 <tr key={i}>
-                                    <td style={{ fontWeight: 600 }}>{m.model}</td>
-                                    <td>{m.mape}</td>
-                                    <td>{m.rmse}</td>
-                                    <td>{m.r2}</td>
+                                    <td style={{ fontWeight: 600 }}>{m.name}</td>
+                                    <td>{(100 - m.accuracy).toFixed(2)}%</td>
+                                    <td>-</td>
+                                    <td>-</td>
                                     <td>
-                                        <span className={`badge ${m.status === 'primary' ? 'badge-success' : m.status === 'active' ? 'badge-info' : 'badge-warning'}`}>
+                                        <span className={`badge ${m.status.includes('Primary') ? 'badge-success' : m.status.includes('Active') ? 'badge-info' : 'badge-warning'}`}>
                                             {m.status}
                                         </span>
                                     </td>
@@ -162,20 +161,23 @@ export default function Forecasting() {
                         </tr>
                     </thead>
                     <tbody>
-                        {anomalies.map((a, i) => (
+                        {anomalyList.length === 0 && (
+                            <tr><td colSpan="6" style={{ textAlign: 'center', opacity: 0.5 }}>No anomalies detected.</td></tr>
+                        )}
+                        {anomalyList.map((a, i) => (
                             <tr key={i}>
-                                <td style={{ color: 'var(--text-tertiary)', fontSize: '0.85rem' }}>{a.time}</td>
+                                <td style={{ color: 'var(--text-tertiary)', fontSize: '0.85rem' }}>{a.date}</td>
                                 <td style={{ fontWeight: 600 }}>{a.sku}</td>
                                 <td>
-                                    <span className={`badge ${a.type === 'spike' ? 'badge-danger' : 'badge-warning'}`}>
-                                        {a.type === 'spike' ? '↑ Spike' : '↓ Drop'}
+                                    <span className={`badge ${a.type === 'Spike' ? 'badge-danger' : 'badge-warning'}`}>
+                                        {a.type === 'Spike' ? '↑ Spike' : '↓ Drop'}
                                     </span>
                                 </td>
-                                <td style={{ fontWeight: 600, color: a.type === 'spike' ? '#f87171' : '#fbbf24' }}>{a.magnitude}</td>
-                                <td>{a.confidence}</td>
+                                <td style={{ fontWeight: 600, color: a.type === 'Spike' ? '#f87171' : '#fbbf24' }}>-</td>
+                                <td>-</td>
                                 <td>
-                                    <span className={`badge ${a.status === 'confirmed' ? 'badge-danger' : a.status === 'resolved' ? 'badge-success' : 'badge-warning'}`}>
-                                        {a.status}
+                                    <span className={`badge ${a.impact === 'High' ? 'badge-danger' : 'badge-warning'}`}>
+                                        {a.impact}
                                     </span>
                                 </td>
                             </tr>

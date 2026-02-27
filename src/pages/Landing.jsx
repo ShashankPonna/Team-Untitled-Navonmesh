@@ -118,7 +118,7 @@ export default function Landing() {
                     </motion.div>
 
                     <TypingAnimation
-                        text="Intelligent Inventory Optimization Framework"
+                        text="StockFlow — Intelligent Inventory Optimization"
                         duration={55}
                     />
                     <p>
