@@ -49,9 +49,23 @@ export default function LoginPage() {
         }
     }
 
-    // Pre-fill dummy login so user doesn't get stuck instantly
-    const setDemoCreds = () => {
-        setForm({ email: "admin@optistock.ai", password: "password123" })
+    // Direct access helper
+    const handleDemoAccess = async () => {
+        setLoading(true)
+        setError("")
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email: "admin@optistock.ai",
+                password: "password123",
+            })
+            if (error) throw error
+            router.push("/dashboard")
+            router.refresh()
+        } catch (err: any) {
+            setError(err.message || "Failed to authenticate.")
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -105,8 +119,8 @@ export default function LoginPage() {
                     </Button>
 
                     {isLogin && (
-                        <Button type="button" variant="outline" onClick={setDemoCreds} className="w-full h-11 mt-2 text-primary gap-2">
-                            <KeyRound className="w-4 h-4" /> Load Demo Credentials
+                        <Button type="button" variant="outline" disabled={loading} onClick={handleDemoAccess} className="w-full h-11 mt-2 text-primary gap-2">
+                            <KeyRound className="w-4 h-4" /> Direct Access
                         </Button>
                     )}
                 </form>
