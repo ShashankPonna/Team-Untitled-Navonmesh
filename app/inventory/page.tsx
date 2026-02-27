@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import {
   Search,
   Filter,
@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   PackageX,
   ArrowUpDown,
+  Loader2,
 } from "lucide-react"
 import AppShell from "@/components/app-shell"
 import {
@@ -18,7 +19,8 @@ import {
   StaggerItem,
 } from "@/components/scroll-animations"
 import AnimatedCounter from "@/components/animated-counter"
-import { inventoryItems, locations } from "@/lib/mock-data"
+import { useInventory, useLocations } from "@/hooks/use-api"
+import { inventoryItems as fallbackItems, locations as fallbackLocations } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -30,6 +32,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import AddProductDialog from "@/components/add-product-dialog"
 
 const statusConfig = {
   critical: { label: "Critical", color: "bg-destructive/15 text-destructive", icon: AlertTriangle },
@@ -45,9 +48,42 @@ export default function InventoryPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortField, setSortField] = useState<string>("name")
   const [sortAsc, setSortAsc] = useState(true)
+  const [localItems, setLocalItems] = useState<any[]>([])
+
+  const handleAddProduct = useCallback((product: any) => {
+    setLocalItems((prev) => [product, ...prev])
+  }, [])
+
+  const { items: apiItems, isLoading } = useInventory()
+  const { locations: apiLocations } = useLocations()
+
+  // Map API data to flat format for the table, or fallback
+  const apiInventory = apiItems.length > 0
+    ? apiItems.map((inv: any) => ({
+      id: inv.id,
+      name: inv.product?.name || "Unknown",
+      sku: inv.product?.sku || "",
+      category: inv.product?.category?.name || "Uncategorized",
+      location: inv.location?.name || "Unknown",
+      stock: inv.current_stock,
+      reserved: inv.reserved_stock,
+      costPrice: Number(inv.product?.cost_price || 0),
+      sellingPrice: Number(inv.product?.selling_price || 0),
+      leadTime: inv.product?.lead_time_days || 0,
+      reorderPoint: inv.reorder_point,
+      status: inv.status,
+    }))
+    : fallbackItems
+  const rawInventoryItems = [...localItems, ...apiInventory]
+  // Deduplicate by ID
+  const inventoryItems = Array.from(new Map(rawInventoryItems.map(item => [item.id, item])).values())
+
+  const locations = apiLocations.length > 0
+    ? apiLocations.map((l: any) => ({ id: l.id, name: l.name }))
+    : fallbackLocations
 
   const filtered = inventoryItems
-    .filter((item) => {
+    .filter((item: any) => {
       const matchesSearch =
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.sku.toLowerCase().includes(searchQuery.toLowerCase())
@@ -57,7 +93,7 @@ export default function InventoryPage() {
         statusFilter === "all" || item.status === statusFilter
       return matchesSearch && matchesLocation && matchesStatus
     })
-    .sort((a, b) => {
+    .sort((a: any, b: any) => {
       const aVal = a[sortField as keyof typeof a]
       const bVal = b[sortField as keyof typeof b]
       if (typeof aVal === "string" && typeof bVal === "string") {
@@ -78,14 +114,14 @@ export default function InventoryPage() {
   }
 
   const totalValue = inventoryItems.reduce(
-    (sum, item) => sum + item.stock * item.costPrice,
+    (sum: number, item: any) => sum + item.stock * item.costPrice,
     0
   )
   const criticalCount = inventoryItems.filter(
-    (i) => i.status === "critical"
+    (i: any) => i.status === "critical"
   ).length
   const lowStockCount = inventoryItems.filter(
-    (i) => i.status === "warning"
+    (i: any) => i.status === "warning"
   ).length
 
   return (
@@ -100,10 +136,7 @@ export default function InventoryPage() {
               Track stock levels, transfers, and alerts per location.
             </p>
           </div>
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Product
-          </Button>
+          <AddProductDialog onAdd={handleAddProduct} />
         </div>
       </ScrollReveal>
 
@@ -147,7 +180,7 @@ export default function InventoryPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
-              {locations.map((loc) => (
+              {locations.map((loc: any) => (
                 <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
               ))}
             </SelectContent>
@@ -171,73 +204,81 @@ export default function InventoryPage() {
       {/* Table */}
       <ScrollReveal delay={0.15} className="mt-4">
         <div className="glass-card overflow-hidden rounded-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  {[
-                    { key: "name", label: "Product" },
-                    { key: "sku", label: "SKU" },
-                    { key: "category", label: "Category" },
-                    { key: "location", label: "Location" },
-                    { key: "stock", label: "Stock" },
-                    { key: "costPrice", label: "Value" },
-                    { key: "status", label: "Status" },
-                  ].map((col) => (
-                    <th
-                      key={col.key}
-                      className="px-5 py-3 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-                      onClick={() => toggleSort(col.key)}
-                    >
-                      <div className="flex items-center gap-1">
-                        {col.label}
-                        <ArrowUpDown className="h-3 w-3 opacity-50" />
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((item) => {
-                  const config = statusConfig[item.status]
-                  const StatusIcon = config.icon
-                  return (
-                    <tr
-                      key={item.id}
-                      className="border-b border-border/40 transition-colors hover:bg-background/40 last:border-0"
-                    >
-                      <td className="px-5 py-3.5">
-                        <span className="text-sm font-medium text-foreground">{item.name}</span>
-                      </td>
-                      <td className="px-5 py-3.5 text-sm font-mono text-muted-foreground">{item.sku}</td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">{item.category}</td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">{item.location}</td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-foreground">{item.stock}</span>
-                          {item.reserved > 0 && (
-                            <span className="text-[11px] text-muted-foreground">
-                              {item.reserved} reserved
-                            </span>
-                          )}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading inventory...</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    {[
+                      { key: "name", label: "Product" },
+                      { key: "sku", label: "SKU" },
+                      { key: "category", label: "Category" },
+                      { key: "location", label: "Location" },
+                      { key: "stock", label: "Stock" },
+                      { key: "costPrice", label: "Value" },
+                      { key: "status", label: "Status" },
+                    ].map((col) => (
+                      <th
+                        key={col.key}
+                        className="px-5 py-3 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                        onClick={() => toggleSort(col.key)}
+                      >
+                        <div className="flex items-center gap-1">
+                          {col.label}
+                          <ArrowUpDown className="h-3 w-3 opacity-50" />
                         </div>
-                      </td>
-                      <td className="px-5 py-3.5 text-sm font-medium text-foreground">
-                        ${(item.stock * item.costPrice).toLocaleString()}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <Badge variant="secondary" className={cn("gap-1", config.color)}>
-                          <StatusIcon className="h-3 w-3" />
-                          {config.label}
-                        </Badge>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-          {filtered.length === 0 && (
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((item: any) => {
+                    const config = statusConfig[item.status as keyof typeof statusConfig]
+                    if (!config) return null
+                    const StatusIcon = config.icon
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-b border-border/40 transition-colors hover:bg-background/40 last:border-0"
+                      >
+                        <td className="px-5 py-3.5">
+                          <span className="text-sm font-medium text-foreground">{item.name}</span>
+                        </td>
+                        <td className="px-5 py-3.5 text-sm font-mono text-muted-foreground">{item.sku}</td>
+                        <td className="px-5 py-3.5 text-sm text-muted-foreground">{item.category}</td>
+                        <td className="px-5 py-3.5 text-sm text-muted-foreground">{item.location}</td>
+                        <td className="px-5 py-3.5">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-foreground">{item.stock}</span>
+                            {item.reserved > 0 && (
+                              <span className="text-[11px] text-muted-foreground">
+                                {item.reserved} reserved
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 text-sm font-medium text-foreground">
+                          ${(item.stock * item.costPrice).toLocaleString()}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <Badge variant="secondary" className={cn("gap-1", config.color)}>
+                            <StatusIcon className="h-3 w-3" />
+                            {config.label}
+                          </Badge>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {!isLoading && filtered.length === 0 && (
             <div className="py-12 text-center text-sm text-muted-foreground">
               No items found matching your filters.
             </div>

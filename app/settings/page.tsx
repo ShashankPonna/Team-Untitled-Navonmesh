@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   Building2,
   MapPin,
@@ -9,6 +9,9 @@ import {
   Shield,
   Database,
   Save,
+  Plus,
+  Trash2,
+  Loader2,
 } from "lucide-react"
 import AppShell from "@/components/app-shell"
 import {
@@ -28,13 +31,162 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+
+const fallbackLocations = [
+  { id: "1", name: "Downtown Store", type: "store", city: "New York" },
+  { id: "2", name: "Mall Central", type: "store", city: "Los Angeles" },
+  { id: "3", name: "Airport Store", type: "store", city: "Chicago" },
+  { id: "4", name: "Suburb East", type: "store", city: "Houston" },
+  { id: "5", name: "Warehouse A", type: "warehouse", city: "Dallas" },
+]
+
+const fallbackUsers = [
+  { id: "1", name: "John Admin", email: "john@acmecorp.com", role: "admin", location: "All Locations" },
+  { id: "2", name: "Sarah Manager", email: "sarah@acmecorp.com", role: "store_manager", location: "Downtown Store" },
+  { id: "3", name: "Mike Inventory", email: "mike@acmecorp.com", role: "store_manager", location: "Mall Central" },
+  { id: "4", name: "Lisa Warehouse", email: "lisa@acmecorp.com", role: "store_manager", location: "Warehouse A" },
+]
 
 export default function SettingsPage() {
   const [businessType, setBusinessType] = useState("multi_store")
   const [emailAlerts, setEmailAlerts] = useState(true)
   const [autoReorder, setAutoReorder] = useState(false)
   const [riskThreshold, setRiskThreshold] = useState("medium")
+
+  // Location state
+  const [locations, setLocations] = useState<any[]>([])
+  const [locLoading, setLocLoading] = useState(true)
+  const [showAddLocation, setShowAddLocation] = useState(false)
+  const [locSaving, setLocSaving] = useState(false)
+  const [locError, setLocError] = useState("")
+  const [newLocation, setNewLocation] = useState({ name: "", type: "store", city: "" })
+
+  // User state
+  const [users, setUsers] = useState<any[]>([])
+  const [userLoading, setUserLoading] = useState(true)
+  const [showAddUser, setShowAddUser] = useState(false)
+  const [userSaving, setUserSaving] = useState(false)
+  const [userError, setUserError] = useState("")
+  const [newUser, setNewUser] = useState({ name: "", email: "", role: "store_manager", location: "All Locations" })
+
+  // Fetch locations from Supabase on mount
+  useEffect(() => {
+    fetch("/api/locations")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLocations(data)
+        } else {
+          setLocations(fallbackLocations)
+        }
+      })
+      .catch(() => setLocations(fallbackLocations))
+      .finally(() => setLocLoading(false))
+  }, [])
+
+  // Fetch users from Supabase on mount
+  useEffect(() => {
+    fetch("/api/users")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setUsers(data)
+        } else {
+          setUsers(fallbackUsers)
+        }
+      })
+      .catch(() => setUsers(fallbackUsers))
+      .finally(() => setUserLoading(false))
+  }, [])
+
+  const handleAddLocation = async () => {
+    if (!newLocation.name || !newLocation.city) return
+    setLocSaving(true)
+    setLocError("")
+
+    try {
+      const res = await fetch("/api/locations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newLocation),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || "Failed to add location")
+      }
+      const data = await res.json()
+      setLocations((prev) => [...prev, data])
+      setNewLocation({ name: "", type: "store", city: "" })
+      setShowAddLocation(false)
+    } catch (err: any) {
+      console.error("Add location error:", err)
+      setLocError(err.message || "Could not save to database")
+    } finally {
+      setLocSaving(false)
+    }
+  }
+
+  const handleDeleteLocation = async (id: string) => {
+    setLocations((prev) => prev.filter((l) => l.id !== id))
+    try {
+      await fetch("/api/locations", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      })
+    } catch (err) {
+      console.error("Delete location error:", err)
+    }
+  }
+
+  const handleAddUser = async () => {
+    if (!newUser.name || !newUser.email) return
+    setUserSaving(true)
+    setUserError("")
+
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || "Failed to add user")
+      }
+      const data = await res.json()
+      setUsers((prev) => [...prev, data])
+      setNewUser({ name: "", email: "", role: "store_manager", location: "All Locations" })
+      setShowAddUser(false)
+    } catch (err: any) {
+      console.error("Add user error:", err)
+      setUserError(err.message || "Could not save to database")
+    } finally {
+      setUserSaving(false)
+    }
+  }
+
+  const handleDeleteUser = async (id: string) => {
+    setUsers((prev) => prev.filter((u) => u.id !== id))
+    try {
+      await fetch("/api/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      })
+    } catch (err) {
+      console.error("Delete user error:", err)
+    }
+  }
 
   return (
     <AppShell>
@@ -86,9 +238,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Business Type</Label>
                   <Select value={businessType} onValueChange={setBusinessType}>
-                    <SelectTrigger className="bg-background/60">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="single_store">Single Store</SelectItem>
                       <SelectItem value="multi_store">Multi-Store Chain</SelectItem>
@@ -104,9 +254,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="timezone">Timezone</Label>
                   <Select defaultValue="est">
-                    <SelectTrigger className="bg-background/60">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="est">Eastern (EST)</SelectItem>
                       <SelectItem value="cst">Central (CST)</SelectItem>
@@ -125,91 +273,195 @@ export default function SettingsPage() {
             </div>
           </TabsContent>
 
-          {/* Locations Tab */}
+          {/* ═══ Locations Tab ═══ */}
           <TabsContent value="locations">
             <div className="glass-card rounded-xl p-6">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-base font-semibold text-foreground">Manage Locations</h3>
-                <Button size="sm" className="gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" />
-                  Add Location
-                </Button>
-              </div>
-              <div className="flex flex-col gap-3">
-                {[
-                  { name: "Downtown Store", type: "store", city: "New York", status: "active" },
-                  { name: "Mall Central", type: "store", city: "Los Angeles", status: "active" },
-                  { name: "Airport Store", type: "store", city: "Chicago", status: "active" },
-                  { name: "Suburb East", type: "store", city: "Houston", status: "active" },
-                  { name: "Warehouse A", type: "warehouse", city: "Dallas", status: "active" },
-                ].map((loc) => (
-                  <div key={loc.name} className="flex items-center justify-between rounded-lg bg-background/50 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "flex h-9 w-9 items-center justify-center rounded-lg",
-                        loc.type === "warehouse" ? "bg-primary/10" : "bg-[var(--success)]/10"
-                      )}>
-                        <MapPin className={cn("h-4 w-4", loc.type === "warehouse" ? "text-primary" : "text-[var(--success)]")} />
+                <Dialog open={showAddLocation} onOpenChange={(v) => { setShowAddLocation(v); setLocError("") }}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="gap-1.5">
+                      <Plus className="h-3.5 w-3.5" />
+                      Add Location
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[420px] glass-card border-border">
+                    <DialogHeader>
+                      <DialogTitle>Add New Location</DialogTitle>
+                      <DialogDescription>Add a new store or warehouse. This saves to the database.</DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-2 space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="locName">Location Name *</Label>
+                        <Input id="locName" placeholder="e.g. South Mall" value={newLocation.name} onChange={(e) => setNewLocation((p) => ({ ...p, name: e.target.value }))} className="bg-background/60" />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{loc.name}</p>
-                        <p className="text-xs text-muted-foreground">{loc.city} - {loc.type}</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Type</Label>
+                          <Select value={newLocation.type} onValueChange={(v) => setNewLocation((p) => ({ ...p, type: v }))}>
+                            <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="store">Store</SelectItem>
+                              <SelectItem value="warehouse">Warehouse</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="locCity">City *</Label>
+                          <Input id="locCity" placeholder="e.g. Miami" value={newLocation.city} onChange={(e) => setNewLocation((p) => ({ ...p, city: e.target.value }))} className="bg-background/60" />
+                        </div>
+                      </div>
+                      {locError && (
+                        <p className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2">{locError}</p>
+                      )}
+                      <div className="flex justify-end gap-3 pt-2">
+                        <Button variant="outline" onClick={() => setShowAddLocation(false)}>Cancel</Button>
+                        <Button onClick={handleAddLocation} disabled={!newLocation.name || !newLocation.city || locSaving}>
+                          {locSaving ? "Saving..." : <><Plus className="mr-1.5 h-4 w-4" />Add Location</>}
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-[var(--success)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--success)]">
-                        Active
-                      </span>
-                      <Button variant="ghost" size="sm">Edit</Button>
-                    </div>
-                  </div>
-                ))}
+                  </DialogContent>
+                </Dialog>
               </div>
+              {locLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading locations...</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {locations.map((loc) => (
+                    <div key={loc.id} className="flex items-center justify-between rounded-lg bg-background/50 p-4 transition-colors hover:bg-background/70">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-lg",
+                          loc.type === "warehouse" ? "bg-primary/10" : "bg-[var(--success)]/10"
+                        )}>
+                          <MapPin className={cn("h-4 w-4", loc.type === "warehouse" ? "text-primary" : "text-[var(--success)]")} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{loc.name}</p>
+                          <p className="text-xs text-muted-foreground">{loc.city} — {loc.type}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center rounded-full bg-[var(--success)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--success)]">
+                          Active
+                        </span>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteLocation(loc.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
 
-          {/* Users Tab */}
+          {/* ═══ Users Tab ═══ */}
           <TabsContent value="users">
             <div className="glass-card rounded-xl p-6">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-base font-semibold text-foreground">User Management</h3>
-                <Button size="sm" className="gap-1.5">
-                  <Users className="h-3.5 w-3.5" />
-                  Add User
-                </Button>
-              </div>
-              <div className="flex flex-col gap-3">
-                {[
-                  { name: "John Admin", email: "john@acmecorp.com", role: "admin", location: "All Locations" },
-                  { name: "Sarah Manager", email: "sarah@acmecorp.com", role: "store_manager", location: "Downtown Store" },
-                  { name: "Mike Inventory", email: "mike@acmecorp.com", role: "store_manager", location: "Mall Central" },
-                  { name: "Lisa Warehouse", email: "lisa@acmecorp.com", role: "store_manager", location: "Warehouse A" },
-                ].map((user) => (
-                  <div key={user.email} className="flex items-center justify-between rounded-lg bg-background/50 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-                        <span className="text-sm font-medium text-primary">{user.name[0]}</span>
+                <Dialog open={showAddUser} onOpenChange={(v) => { setShowAddUser(v); setUserError("") }}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="gap-1.5">
+                      <Plus className="h-3.5 w-3.5" />
+                      Add User
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[440px] glass-card border-border">
+                    <DialogHeader>
+                      <DialogTitle>Add New User</DialogTitle>
+                      <DialogDescription>Invite a team member. This saves to the database.</DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-2 space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="userName">Full Name *</Label>
+                          <Input id="userName" placeholder="Jane Doe" value={newUser.name} onChange={(e) => setNewUser((p) => ({ ...p, name: e.target.value }))} className="bg-background/60" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="userEmail">Email *</Label>
+                          <Input id="userEmail" type="email" placeholder="jane@acmecorp.com" value={newUser.email} onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))} className="bg-background/60" />
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Role</Label>
+                          <Select value={newUser.role} onValueChange={(v) => setNewUser((p) => ({ ...p, role: v }))}>
+                            <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="store_manager">Store Manager</SelectItem>
+                              <SelectItem value="viewer">Viewer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Assigned Location</Label>
+                          <Select value={newUser.location} onValueChange={(v) => setNewUser((p) => ({ ...p, location: v }))}>
+                            <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="All Locations">All Locations</SelectItem>
+                              {locations.map((loc) => (
+                                <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      {userError && (
+                        <p className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2">{userError}</p>
+                      )}
+                      <div className="flex justify-end gap-3 pt-2">
+                        <Button variant="outline" onClick={() => setShowAddUser(false)}>Cancel</Button>
+                        <Button onClick={handleAddUser} disabled={!newUser.name || !newUser.email || userSaving}>
+                          {userSaving ? "Saving..." : <><Plus className="mr-1.5 h-4 w-4" />Add User</>}
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <span className={cn(
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
-                          user.role === "admin" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                        )}>
-                          {user.role === "admin" ? "Admin" : "Store Manager"}
-                        </span>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">{user.location}</p>
-                      </div>
-                      <Button variant="ghost" size="sm">Edit</Button>
-                    </div>
-                  </div>
-                ))}
+                  </DialogContent>
+                </Dialog>
               </div>
+              {userLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading users...</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {users.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between rounded-lg bg-background/50 p-4 transition-colors hover:bg-background/70">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                          <span className="text-sm font-medium text-primary">{user.name[0]}</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{user.name}</p>
+                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <span className={cn(
+                            "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
+                            user.role === "admin" ? "bg-primary/10 text-primary" : user.role === "viewer" ? "bg-muted text-muted-foreground" : "bg-[var(--info)]/10 text-[var(--info)]"
+                          )}>
+                            {user.role === "admin" ? "Admin" : user.role === "viewer" ? "Viewer" : "Store Manager"}
+                          </span>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">{user.location}</p>
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteUser(user.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -236,9 +488,7 @@ export default function SettingsPage() {
                     <p className="text-xs text-muted-foreground">Minimum severity to trigger notifications</p>
                   </div>
                   <Select value={riskThreshold} onValueChange={setRiskThreshold}>
-                    <SelectTrigger className="w-[130px] bg-background/60">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="w-[130px] bg-background/60"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="low">Low</SelectItem>
                       <SelectItem value="medium">Medium</SelectItem>
@@ -264,9 +514,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Forecast Model</Label>
                   <Select defaultValue="moving_avg">
-                    <SelectTrigger className="bg-background/60">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="moving_avg">Moving Average</SelectItem>
                       <SelectItem value="arima">ARIMA</SelectItem>
@@ -277,9 +525,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Default Forecast Period</Label>
                   <Select defaultValue="30">
-                    <SelectTrigger className="bg-background/60">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="7">7 Days</SelectItem>
                       <SelectItem value="14">14 Days</SelectItem>

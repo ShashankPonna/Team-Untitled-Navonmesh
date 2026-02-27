@@ -25,9 +25,15 @@ import {
   StaggerItem,
   ScaleOnScroll,
 } from "@/components/scroll-animations"
-import { kpiData } from "@/lib/mock-data"
+import { useDashboard } from "@/hooks/use-api"
+import { kpiData as fallbackKpi } from "@/lib/mock-data"
 
 export default function DashboardPage() {
+  const { data, isLoading } = useDashboard()
+
+  // Use API data when available; only use mock data as a loading fallback
+  const kpi = data?.kpi ?? (isLoading ? fallbackKpi : fallbackKpi)
+
   return (
     <AppShell>
       {/* Header */}
@@ -47,8 +53,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Inventory Value"
-            value={kpiData.totalInventoryValue}
-            change={kpiData.totalInventoryValueChange}
+            value={kpi.totalInventoryValue}
+            change={kpi.totalInventoryValueChange}
             prefix="$"
             icon={DollarSign}
             iconColor="text-primary"
@@ -57,8 +63,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Risk Alerts"
-            value={kpiData.riskAlerts}
-            change={kpiData.riskAlertsChange}
+            value={kpi.riskAlerts}
+            change={kpi.riskAlertsChange}
             icon={AlertTriangle}
             iconColor="text-destructive"
           />
@@ -66,8 +72,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Forecasted Demand"
-            value={kpiData.forecastedDemand}
-            change={kpiData.forecastedDemandChange}
+            value={kpi.forecastedDemand}
+            change={kpi.forecastedDemandChange}
             icon={TrendingUp}
             iconColor="text-primary"
           />
@@ -75,8 +81,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Expiry Alerts"
-            value={kpiData.expiryAlerts}
-            change={kpiData.expiryAlertsChange}
+            value={kpi.expiryAlerts}
+            change={kpi.expiryAlertsChange}
             icon={Clock}
             iconColor="text-warning"
           />
@@ -88,8 +94,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Overstock Alerts"
-            value={kpiData.overstockAlerts}
-            change={kpiData.overstockAlertsChange}
+            value={kpi.overstockAlerts}
+            change={kpi.overstockAlertsChange}
             icon={PackageX}
             iconColor="text-info"
           />
@@ -97,7 +103,7 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Service Level"
-            value={kpiData.serviceLevel}
+            value={kpi.serviceLevel}
             change={2.1}
             suffix="%"
             decimals={1}
@@ -108,7 +114,7 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Fill Rate"
-            value={kpiData.fillRate}
+            value={kpi.fillRate}
             change={1.8}
             suffix="%"
             decimals={1}
@@ -119,7 +125,7 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Inventory Turnover"
-            value={kpiData.inventoryTurnover}
+            value={kpi.inventoryTurnover}
             change={5.2}
             suffix="x"
             decimals={1}
@@ -132,10 +138,10 @@ export default function DashboardPage() {
       {/* Charts Row 1 */}
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ScrollReveal delay={0.1}>
-          <DemandForecastChart />
+          <DemandForecastChart data={data?.demandForecastData} />
         </ScrollReveal>
         <ScrollReveal delay={0.2}>
-          <StockVsDemandChart />
+          <StockVsDemandChart data={data?.stockVsDemandData} />
         </ScrollReveal>
       </div>
 

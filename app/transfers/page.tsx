@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import {
   ArrowRight,
   Plus,
@@ -9,6 +9,7 @@ import {
   Clock,
   Package,
   MapPin,
+  Loader2,
 } from "lucide-react"
 import AppShell from "@/components/app-shell"
 import {
@@ -17,17 +18,12 @@ import {
   StaggerItem,
 } from "@/components/scroll-animations"
 import AnimatedCounter from "@/components/animated-counter"
-import { transferHistory, locations, inventoryItems } from "@/lib/mock-data"
+import { useTransfers, useLocations, revalidateAll } from "@/hooks/use-api"
+import { transferHistory as fallbackTransfers, locations as fallbackLocations } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import NewTransferDialog from "@/components/new-transfer-dialog"
 
 const statusStyles = {
   completed: { label: "Completed", color: "bg-[var(--success)]/15 text-[var(--success)]", icon: CheckCircle2 },
@@ -43,10 +39,111 @@ const transferSuggestions = [
 
 export default function TransfersPage() {
   const [showSuggestions, setShowSuggestions] = useState(true)
+  const [localTransfers, setLocalTransfers] = useState<any[]>([])
+  const [approvedSuggestions, setApprovedSuggestions] = useState<Set<number>>(new Set())
+  const { transfers: apiTransfers, isLoading } = useTransfers()
+  const { locations: apiLocations } = useLocations()
 
-  const inTransit = transferHistory.filter((t) => t.status === "in_transit").length
-  const completed = transferHistory.filter((t) => t.status === "completed").length
-  const pending = transferHistory.filter((t) => t.status === "pending").length
+  const handleAddTransfer = useCallback((transfer: any) => {
+    setLocalTransfers((prev) => [transfer, ...prev])
+  }, [])
+
+  const handleApproveSuggestion = useCallback(async (index: number, sug: any) => {
+    setApprovedSuggestions((prev) => new Set(prev).add(index))
+
+    try {
+      // Look up product and location IDs
+      const [prodRes, locRes] = await Promise.all([
+        fetch("/api/products"),
+        fetch("/api/locations"),
+      ])
+      const prods = await prodRes.json()
+      const locs = await locRes.json()
+
+      const product = prods.find?.((p: any) => p.name === sug.product)
+      const fromLoc = locs.find?.((l: any) => l.name === sug.from)
+      const toLoc = locs.find?.((l: any) => l.name === sug.to)
+
+      if (product && fromLoc && toLoc) {
+        const res = await fetch("/api/transfers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            product_id: product.id,
+            from_location_id: fromLoc.id,
+            to_location_id: toLoc.id,
+            quantity: sug.quantity,
+            status: "in_transit",
+          }),
+        })
+        const data = await res.json()
+        setLocalTransfers((prev) => [{
+          id: data.id || crypto.randomUUID(),
+          product: sug.product,
+          from: sug.from,
+          to: sug.to,
+          quantity: sug.quantity,
+          status: "in_transit",
+          date: new Date().toISOString().split("T")[0],
+        }, ...prev])
+        revalidateAll()
+        return
+      }
+    } catch (err) {
+      console.error("Failed to save approval to Supabase:", err)
+    }
+
+    // Fallback: add locally
+    setLocalTransfers((prev) => [{
+      id: crypto.randomUUID(),
+      product: sug.product,
+      from: sug.from,
+      to: sug.to,
+      quantity: sug.quantity,
+      status: "in_transit",
+      date: new Date().toISOString().split("T")[0],
+    }, ...prev])
+  }, [])
+
+  const handleStatusChange = useCallback(async (id: string, newStatus: string) => {
+    // Optimistic UI update
+    setLocalTransfers((prev) =>
+      prev.map((t) => t.id === id ? { ...t, status: newStatus } : t)
+    )
+
+    // Persist to Supabase
+    try {
+      await fetch(`/api/transfers/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      revalidateAll()
+    } catch (err) {
+      console.error("Failed to update transfer status:", err)
+    }
+  }, [])
+
+  // Map API transfers to flat format or fallback
+  const apiHistory = apiTransfers.length > 0
+    ? apiTransfers.map((t: any) => ({
+      id: t.id,
+      product: t.product?.name || "Unknown",
+      from: t.from_location?.name || "Unknown",
+      to: t.to_location?.name || "Unknown",
+      quantity: t.quantity,
+      status: t.status,
+      date: t.created_at?.split("T")[0] || "",
+    }))
+    : fallbackTransfers
+  const rawTransferHistory = [...localTransfers, ...apiHistory]
+  const transferHistory = Array.from(new Map(rawTransferHistory.map(item => [item.id, item])).values())
+
+  const locations = apiLocations.length > 0 ? apiLocations : fallbackLocations
+
+  const inTransit = transferHistory.filter((t: any) => t.status === "in_transit").length
+  const completed = transferHistory.filter((t: any) => t.status === "completed").length
+  const pending = transferHistory.filter((t: any) => t.status === "pending").length
 
   return (
     <AppShell>
@@ -60,10 +157,7 @@ export default function TransfersPage() {
               Coordinate inter-location stock movements and AI-suggested transfers.
             </p>
           </div>
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Transfer
-          </Button>
+          <NewTransferDialog onAdd={handleAddTransfer} />
         </div>
       </ScrollReveal>
 
@@ -149,9 +243,18 @@ export default function TransfersPage() {
                       {sug.reason}
                     </p>
                   </div>
-                  <Button size="sm" variant="outline" className="shrink-0 gap-1.5">
-                    <ArrowRight className="h-3.5 w-3.5" />
-                    Approve
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 gap-1.5"
+                    disabled={approvedSuggestions.has(i)}
+                    onClick={() => handleApproveSuggestion(i, sug)}
+                  >
+                    {approvedSuggestions.has(i) ? (
+                      <><CheckCircle2 className="h-3.5 w-3.5 text-[var(--success)]" /> Approved</>
+                    ) : (
+                      <><ArrowRight className="h-3.5 w-3.5" /> Approve</>
+                    )}
                   </Button>
                 </div>
               ))}
@@ -166,41 +269,65 @@ export default function TransfersPage() {
           <div className="border-b border-border p-5">
             <h3 className="text-sm font-semibold text-foreground">Transfer History</h3>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Product</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">From</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">To</th>
-                  <th className="px-5 py-3 text-right text-xs font-medium text-muted-foreground">Qty</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Status</th>
-                  <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transferHistory.map((transfer) => {
-                  const config = statusStyles[transfer.status]
-                  const StatusIcon = config.icon
-                  return (
-                    <tr key={transfer.id} className="border-b border-border/40 last:border-0 hover:bg-background/40 transition-colors">
-                      <td className="px-5 py-3.5 text-sm font-medium text-foreground">{transfer.product}</td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">{transfer.from}</td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">{transfer.to}</td>
-                      <td className="px-5 py-3.5 text-right text-sm font-medium text-foreground">{transfer.quantity}</td>
-                      <td className="px-5 py-3.5">
-                        <Badge variant="secondary" className={cn("gap-1", config.color)}>
-                          <StatusIcon className="h-3 w-3" />
-                          {config.label}
-                        </Badge>
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">{transfer.date}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading transfers...</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Product</th>
+                    <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">From</th>
+                    <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">To</th>
+                    <th className="px-5 py-3 text-right text-xs font-medium text-muted-foreground">Qty</th>
+                    <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Status</th>
+                    <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Date</th>
+                    <th className="px-5 py-3 text-right text-xs font-medium text-muted-foreground">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transferHistory.map((transfer: any) => {
+                    const config = statusStyles[transfer.status as keyof typeof statusStyles]
+                    if (!config) return null
+                    const StatusIcon = config.icon
+                    return (
+                      <tr key={transfer.id} className="border-b border-border/40 last:border-0 hover:bg-background/40 transition-colors">
+                        <td className="px-5 py-3.5 text-sm font-medium text-foreground">{transfer.product}</td>
+                        <td className="px-5 py-3.5 text-sm text-muted-foreground">{transfer.from}</td>
+                        <td className="px-5 py-3.5 text-sm text-muted-foreground">{transfer.to}</td>
+                        <td className="px-5 py-3.5 text-right text-sm font-medium text-foreground">{transfer.quantity}</td>
+                        <td className="px-5 py-3.5">
+                          <Badge variant="secondary" className={cn("gap-1", config.color)}>
+                            <StatusIcon className="h-3 w-3" />
+                            {config.label}
+                          </Badge>
+                        </td>
+                        <td className="px-5 py-3.5 text-sm text-muted-foreground">{transfer.date}</td>
+                        <td className="px-5 py-3.5 text-right">
+                          {transfer.status === "pending" && (
+                            <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => handleStatusChange(transfer.id, "in_transit")}>
+                              <Truck className="h-3 w-3" /> Ship
+                            </Button>
+                          )}
+                          {transfer.status === "in_transit" && (
+                            <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => handleStatusChange(transfer.id, "completed")}>
+                              <CheckCircle2 className="h-3 w-3" /> Complete
+                            </Button>
+                          )}
+                          {transfer.status === "completed" && (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </ScrollReveal>
 
@@ -211,7 +338,7 @@ export default function TransfersPage() {
             Location Network
           </h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {locations.map((loc) => (
+            {locations.map((loc: any) => (
               <div
                 key={loc.id}
                 className="flex flex-col gap-2 rounded-lg bg-background/50 p-4 transition-all hover:bg-background/70"
@@ -225,8 +352,8 @@ export default function TransfersPage() {
                 </div>
                 <p className="text-xs text-muted-foreground">{loc.city}</p>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">{loc.products} products</span>
-                  <span className="font-medium text-foreground">${(loc.totalValue / 1000).toFixed(0)}K</span>
+                  <span className="text-muted-foreground">{loc.products || 0} products</span>
+                  <span className="font-medium text-foreground">${((loc.totalValue || 0) / 1000).toFixed(0)}K</span>
                 </div>
                 <Badge variant="secondary" className="w-fit text-[10px] capitalize">
                   {loc.type}

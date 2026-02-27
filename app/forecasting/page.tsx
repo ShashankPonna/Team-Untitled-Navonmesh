@@ -23,7 +23,9 @@ import {
   StaggerItem,
 } from "@/components/scroll-animations"
 import AnimatedCounter from "@/components/animated-counter"
-import { demandForecastData, forecastAccuracyData, locations } from "@/lib/mock-data"
+import { useForecasts, useLocations } from "@/hooks/use-api"
+import { demandForecastData as fallbackForecast, forecastAccuracyData, locations as fallbackLocations } from "@/lib/mock-data"
+import CsvUploadDialog from "@/components/csv-upload-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -56,6 +58,16 @@ export default function ForecastingPage() {
   const [selectedLocation, setSelectedLocation] = useState("all")
   const [forecastPeriod, setForecastPeriod] = useState("30")
   const [modelType, setModelType] = useState("moving_avg")
+  const [uploadedData, setUploadedData] = useState<any[]>([])
+
+  const { forecasts: apiForecast } = useForecasts()
+  const { locations: apiLocations } = useLocations()
+  const demandForecastData = uploadedData.length > 0 ? uploadedData : (apiForecast.length > 0 ? apiForecast : fallbackForecast)
+  const locations = apiLocations.length > 0 ? apiLocations.map((l: any) => ({ id: l.id, name: l.name })) : fallbackLocations
+
+  const handleCsvUpload = (rows: any[]) => {
+    setUploadedData(rows)
+  }
 
   return (
     <AppShell>
@@ -79,7 +91,7 @@ export default function ForecastingPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
-              {locations.map((loc) => (
+              {locations.map((loc: any) => (
                 <SelectItem key={loc.id} value={loc.name}>
                   {loc.name}
                 </SelectItem>
@@ -105,10 +117,13 @@ export default function ForecastingPage() {
               <SelectItem value="arima">ARIMA</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="ml-auto gap-2 bg-background/60">
-            <Upload className="h-4 w-4" />
-            Upload CSV
-          </Button>
+          <CsvUploadDialog
+            onUpload={handleCsvUpload}
+            expectedColumns={["date", "actual", "predicted"]}
+            title="Upload Forecast Data"
+            description="Upload a CSV with columns: date, actual, predicted. Optionally include lower and upper bounds."
+            triggerLabel="Upload CSV"
+          />
         </div>
       </ScrollReveal>
 

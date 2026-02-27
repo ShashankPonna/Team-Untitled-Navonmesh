@@ -33,6 +33,8 @@ import {
 import AnimatedCounter from "@/components/animated-counter"
 import { costMetrics, storeComparisonData } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
+import CsvUploadDialog from "@/components/csv-upload-dialog"
+import { exportToCSV } from "@/lib/csv-export"
 
 const chartTooltipStyle = {
   backgroundColor: "oklch(0.97 0.01 85 / 0.9)",
@@ -63,6 +65,20 @@ const monthlyTurnover = [
 ]
 
 export default function ReportsPage() {
+  const handleExport = () => {
+    const exportData = storeComparisonData.map((s: any) => ({
+      Store: s.store,
+      Revenue: s.revenue,
+      Turnover: s.turnover || "N/A",
+    }))
+    exportToCSV(exportData, "inventory_report")
+  }
+
+  const handleImport = (rows: any[]) => {
+    console.log("Imported report data:", rows)
+    // In a full implementation, this would update the report data
+  }
+
   return (
     <AppShell>
       <ScrollReveal>
@@ -76,11 +92,14 @@ export default function ReportsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2 bg-background/60">
-              <Upload className="h-4 w-4" />
-              Import CSV
-            </Button>
-            <Button className="gap-2">
+            <CsvUploadDialog
+              onUpload={handleImport}
+              expectedColumns={["store", "revenue"]}
+              title="Import Report Data"
+              description="Upload a CSV with columns: store, revenue. Optionally include turnover."
+              triggerLabel="Import CSV"
+            />
+            <Button className="gap-2" onClick={handleExport}>
               <Download className="h-4 w-4" />
               Export Report
             </Button>

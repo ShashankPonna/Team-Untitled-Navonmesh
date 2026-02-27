@@ -13,9 +13,9 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import {
-  demandForecastData,
-  stockVsDemandData,
-  storeComparisonData,
+  demandForecastData as mockForecast,
+  stockVsDemandData as mockStockDemand,
+  storeComparisonData as mockStoreComparison,
 } from "@/lib/mock-data"
 
 const chartTooltipStyle = {
@@ -29,7 +29,8 @@ const chartTooltipStyle = {
   fontSize: "13px",
 }
 
-export function DemandForecastChart() {
+export function DemandForecastChart({ data }: { data?: any[] }) {
+  const chartData = data || mockForecast
   return (
     <div className="glass-card rounded-xl p-5">
       <h3 className="mb-4 text-sm font-semibold text-foreground">
@@ -37,7 +38,7 @@ export function DemandForecastChart() {
       </h3>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={demandForecastData}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="gradActual" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#5aada0" stopOpacity={0.3} />
@@ -78,7 +79,8 @@ export function DemandForecastChart() {
   )
 }
 
-export function StockVsDemandChart() {
+export function StockVsDemandChart({ data }: { data?: any[] }) {
+  const chartData = data || mockStockDemand
   return (
     <div className="glass-card rounded-xl p-5">
       <h3 className="mb-4 text-sm font-semibold text-foreground">
@@ -86,7 +88,7 @@ export function StockVsDemandChart() {
       </h3>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={stockVsDemandData} barGap={4}>
+          <BarChart data={chartData} barGap={4}>
             <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.86 0.02 80 / 0.4)" />
             <XAxis dataKey="name" tick={{ fontSize: 11, fill: "oklch(0.50 0.02 260)" }} />
             <YAxis tick={{ fontSize: 12, fill: "oklch(0.50 0.02 260)" }} />
@@ -101,7 +103,8 @@ export function StockVsDemandChart() {
   )
 }
 
-export function StoreComparisonChart() {
+export function StoreComparisonChart({ data }: { data?: any[] }) {
+  const chartData = data || mockStoreComparison
   return (
     <div className="glass-card rounded-xl p-5">
       <h3 className="mb-4 text-sm font-semibold text-foreground">
@@ -109,7 +112,7 @@ export function StoreComparisonChart() {
       </h3>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={storeComparisonData} layout="vertical" barSize={18}>
+          <BarChart data={chartData} layout="vertical" barSize={18}>
             <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.86 0.02 80 / 0.4)" />
             <XAxis
               type="number"
