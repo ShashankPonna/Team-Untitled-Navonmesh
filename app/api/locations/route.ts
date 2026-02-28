@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-// GET /api/locations — list all locations with computed stats
+// GET /api/locations — list all locations (scoped to current user) with computed stats
 export async function GET() {
+    const supabase = await createClient()
+
     const { data: locations, error } = await supabase
         .from("locations")
         .select("*")
@@ -35,13 +37,17 @@ export async function GET() {
     return NextResponse.json(enriched)
 }
 
-// POST /api/locations — create a new location
+// POST /api/locations — create a new location owned by the current user
 export async function POST(request: Request) {
+    const supabase = await createClient()
     const body = await request.json()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const { data, error } = await supabase
         .from("locations")
-        .insert(body)
+        .insert({ ...body, user_id: user.id })
         .select()
         .single()
 
@@ -52,8 +58,9 @@ export async function POST(request: Request) {
     return NextResponse.json(data, { status: 201 })
 }
 
-// DELETE /api/locations — delete a location by id
+// DELETE /api/locations — delete a location by id (RLS ensures user can only delete their own)
 export async function DELETE(request: Request) {
+    const supabase = await createClient()
     const { id } = await request.json()
 
     const { error } = await supabase

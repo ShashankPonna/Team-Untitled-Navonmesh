@@ -1,6 +1,11 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
+/**
+ * Creates a Supabase client that uses the current user's session from cookies.
+ * RLS policies are enforced automatically — queries are scoped to auth.uid().
+ * Use this in all API route handlers instead of the global service client.
+ */
 export async function createClient() {
     const cookieStore = await cookies()
 
@@ -18,9 +23,8 @@ export async function createClient() {
                             cookieStore.set(name, value, options)
                         )
                     } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
+                        // setAll called from a Server Component — cookies are read-only.
+                        // This is safe to ignore in API routes.
                     }
                 },
             },

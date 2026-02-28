@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-// GET /api/inventory — list all inventory with product and location details
+// GET /api/inventory — list inventory scoped to the current user
 export async function GET(request: Request) {
+    const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
     const locationId = searchParams.get("location_id")
@@ -32,13 +33,17 @@ export async function GET(request: Request) {
     return NextResponse.json(data)
 }
 
-// POST /api/inventory — add a new inventory record
+// POST /api/inventory — add a new inventory record owned by the current user
 export async function POST(request: Request) {
+    const supabase = await createClient()
     const body = await request.json()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const { data, error } = await supabase
         .from("inventory")
-        .insert(body)
+        .insert({ ...body, user_id: user.id })
         .select(`
       *,
       product:products(*, category:categories(*)),

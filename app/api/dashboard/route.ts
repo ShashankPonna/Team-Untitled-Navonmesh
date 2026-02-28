@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/server"
 
 export const dynamic = "force-dynamic"
 
 // GET /api/dashboard — aggregated KPIs and chart data for the dashboard
 export async function GET() {
     try {
-        // Fetch all data in parallel
+        const supabase = await createClient()
+
+        // Fetch all data in parallel (RLS automatically scopes to current user)
         const [
             inventoryRes,
             alertsRes,
@@ -17,7 +19,6 @@ export async function GET() {
             supabase.from("demand_forecasts").select("*").order("date"),
         ])
 
-        // Log errors for debugging
         if (inventoryRes.error) console.error("Inventory query error:", inventoryRes.error)
         if (alertsRes.error) console.error("Alerts query error:", alertsRes.error)
         if (forecastsRes.error) console.error("Forecasts query error:", forecastsRes.error)
@@ -36,7 +37,6 @@ export async function GET() {
             (a: any) => a.severity === "high" || a.type === "stockout" || a.type === "reorder"
         ).length
 
-        // Sum of predicted demand for future months
         const forecastedDemand = forecasts
             .filter((f: any) => f.actual_demand === null || f.actual_demand === 0)
             .reduce((sum: number, f: any) => sum + (f.predicted_demand || 0), 0)
@@ -44,7 +44,6 @@ export async function GET() {
         const expiryAlerts = alerts.filter((a: any) => a.type === "expiry").length
         const overstockAlerts = alerts.filter((a: any) => a.type === "overstock").length
 
-        // Service metrics from inventory
         const totalItems = inventory.length
         const goodItems = inventory.filter(
             (i: any) => i.status === "good" || i.status === "overstock"
@@ -96,7 +95,6 @@ export async function GET() {
             const catName = (inv as any).product?.category?.name || "Other"
             if (!categoryMap[catName]) categoryMap[catName] = { stock: 0, demand: 0 }
             categoryMap[catName].stock += inv.current_stock
-            // Demand is approximated from reorder_point * 2 (simplification)
             categoryMap[catName].demand += inv.reorder_point * 2
         }
         const stockVsDemandData = Object.entries(categoryMap).map(([name, vals]) => ({

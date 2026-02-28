@@ -1,22 +1,11 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+  AreaChart, Area, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts"
-import {
-  demandForecastData as mockForecast,
-  stockVsDemandData as mockStockDemand,
-  storeComparisonData as mockStoreComparison,
-} from "@/lib/mock-data"
+import { useForecasts, useInventory } from "@/hooks/use-api"
 
 const chartTooltipStyle = {
   backgroundColor: "oklch(0.97 0.01 85 / 0.9)",
@@ -29,13 +18,25 @@ const chartTooltipStyle = {
   fontSize: "13px",
 }
 
+// Demand forecast: actual vs predicted from the demand_forecasts table
 export function DemandForecastChart({ data }: { data?: any[] }) {
-  const chartData = data || mockForecast
+  const { forecasts } = useForecasts()
+  const chartData = data && data.length > 0 ? data : forecasts
+
+  if (!chartData || chartData.length === 0) {
+    return (
+      <div className="glass-card rounded-xl p-5">
+        <h3 className="mb-4 text-sm font-semibold text-foreground">Demand Forecast</h3>
+        <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+          No forecast data yet — add products and sales records to generate predictions.
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="glass-card rounded-xl p-5">
-      <h3 className="mb-4 text-sm font-semibold text-foreground">
-        Demand Forecast
-      </h3>
+      <h3 className="mb-4 text-sm font-semibold text-foreground">Demand Forecast</h3>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
@@ -54,24 +55,8 @@ export function DemandForecastChart({ data }: { data?: any[] }) {
             <YAxis tick={{ fontSize: 12, fill: "oklch(0.50 0.02 260)" }} />
             <Tooltip contentStyle={chartTooltipStyle} />
             <Legend wrapperStyle={{ fontSize: "12px" }} />
-            <Area
-              type="monotone"
-              dataKey="actual"
-              stroke="#5aada0"
-              strokeWidth={2}
-              fill="url(#gradActual)"
-              name="Actual"
-              connectNulls={false}
-            />
-            <Area
-              type="monotone"
-              dataKey="predicted"
-              stroke="#d4a574"
-              strokeWidth={2}
-              strokeDasharray="6 3"
-              fill="url(#gradPredicted)"
-              name="Predicted"
-            />
+            <Area type="monotone" dataKey="actual" stroke="#5aada0" strokeWidth={2} fill="url(#gradActual)" name="Actual" connectNulls={false} />
+            <Area type="monotone" dataKey="predicted" stroke="#d4a574" strokeWidth={2} strokeDasharray="6 3" fill="url(#gradPredicted)" name="Predicted" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -79,13 +64,31 @@ export function DemandForecastChart({ data }: { data?: any[] }) {
   )
 }
 
+// Stock vs Reorder Point: computed from real inventory data
 export function StockVsDemandChart({ data }: { data?: any[] }) {
-  const chartData = data || mockStockDemand
+  const { items } = useInventory()
+
+  // Build chart data from real inventory: product name, current stock, reorder_point
+  const chartData = data && data.length > 0 ? data : items.slice(0, 8).map((inv: any) => ({
+    name: (inv.product?.name || "Unknown").slice(0, 12),
+    stock: inv.current_stock,
+    demand: inv.reorder_point, // reorder point acts as minimum demand threshold
+  }))
+
+  if (!chartData || chartData.length === 0) {
+    return (
+      <div className="glass-card rounded-xl p-5">
+        <h3 className="mb-4 text-sm font-semibold text-foreground">Stock vs Reorder Point</h3>
+        <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+          No inventory data yet.
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="glass-card rounded-xl p-5">
-      <h3 className="mb-4 text-sm font-semibold text-foreground">
-        Stock vs Demand
-      </h3>
+      <h3 className="mb-4 text-sm font-semibold text-foreground">Stock vs Reorder Point</h3>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} barGap={4}>
@@ -94,8 +97,8 @@ export function StockVsDemandChart({ data }: { data?: any[] }) {
             <YAxis tick={{ fontSize: 12, fill: "oklch(0.50 0.02 260)" }} />
             <Tooltip contentStyle={chartTooltipStyle} />
             <Legend wrapperStyle={{ fontSize: "12px" }} />
-            <Bar dataKey="stock" fill="#5aada0" radius={[4, 4, 0, 0]} name="Stock" />
-            <Bar dataKey="demand" fill="#d4a574" radius={[4, 4, 0, 0]} name="Demand" />
+            <Bar dataKey="stock" fill="#5aada0" radius={[4, 4, 0, 0]} name="Current Stock" />
+            <Bar dataKey="demand" fill="#d4a574" radius={[4, 4, 0, 0]} name="Reorder Point" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -103,13 +106,42 @@ export function StockVsDemandChart({ data }: { data?: any[] }) {
   )
 }
 
+// Store Performance: revenue + healthy item % per location from /api/reports
 export function StoreComparisonChart({ data }: { data?: any[] }) {
-  const chartData = data || mockStoreComparison
+  const [reportData, setReportData] = useState<any[]>([])
+
+  useEffect(() => {
+    if (data && data.length > 0) return // prop override
+    fetch("/api/reports")
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d?.storeComparisonData)) {
+          setReportData(d.storeComparisonData.map((s: any) => ({
+            store: s.store.length > 12 ? s.store.slice(0, 12) + "…" : s.store,
+            revenue: s.revenue,
+            efficiency: s.efficiency,
+          })))
+        }
+      })
+      .catch(() => { })
+  }, [data])
+
+  const chartData = data && data.length > 0 ? data : reportData
+
+  if (!chartData || chartData.length === 0) {
+    return (
+      <div className="glass-card rounded-xl p-5">
+        <h3 className="mb-4 text-sm font-semibold text-foreground">Store Performance</h3>
+        <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+          No location data yet — add locations and products to see performance.
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="glass-card rounded-xl p-5">
-      <h3 className="mb-4 text-sm font-semibold text-foreground">
-        Store Performance
-      </h3>
+      <h3 className="mb-4 text-sm font-semibold text-foreground">Store Performance</h3>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} layout="vertical" barSize={18}>

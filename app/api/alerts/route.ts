@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-// GET /api/alerts — list alerts with product and location details
+// GET /api/alerts — list alerts scoped to the current user
 export async function GET(request: Request) {
+    const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const severity = searchParams.get("severity")
     const type = searchParams.get("type")
@@ -34,13 +35,17 @@ export async function GET(request: Request) {
     return NextResponse.json(data)
 }
 
-// POST /api/alerts — create a new alert
+// POST /api/alerts — create a new alert owned by the current user
 export async function POST(request: Request) {
+    const supabase = await createClient()
     const body = await request.json()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const { data, error } = await supabase
         .from("alerts")
-        .insert(body)
+        .insert({ ...body, user_id: user.id })
         .select(`
       *,
       product:products(name, sku),

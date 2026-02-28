@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-// GET /api/forecasts — get demand forecast data
+// GET /api/forecasts — get demand forecast data scoped to the current user
 export async function GET(request: Request) {
+    const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const category = searchParams.get("category") || "all"
 

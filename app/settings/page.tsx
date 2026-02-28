@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import {
   Building2,
   MapPin,
@@ -41,26 +42,28 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
-const fallbackLocations = [
-  { id: "1", name: "Downtown Store", type: "store", city: "New York" },
-  { id: "2", name: "Mall Central", type: "store", city: "Los Angeles" },
-  { id: "3", name: "Airport Store", type: "store", city: "Chicago" },
-  { id: "4", name: "Suburb East", type: "store", city: "Houston" },
-  { id: "5", name: "Warehouse A", type: "warehouse", city: "Dallas" },
-]
 
-const fallbackUsers = [
-  { id: "1", name: "John Admin", email: "john@acmecorp.com", role: "admin", location: "All Locations" },
-  { id: "2", name: "Sarah Manager", email: "sarah@acmecorp.com", role: "store_manager", location: "Downtown Store" },
-  { id: "3", name: "Mike Inventory", email: "mike@acmecorp.com", role: "store_manager", location: "Mall Central" },
-  { id: "4", name: "Lisa Warehouse", email: "lisa@acmecorp.com", role: "store_manager", location: "Warehouse A" },
-]
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams()
+  const activeTab = searchParams.get("tab") || "business"
+
   const [businessType, setBusinessType] = useState("multi_store")
   const [emailAlerts, setEmailAlerts] = useState(true)
   const [autoReorder, setAutoReorder] = useState(false)
   const [riskThreshold, setRiskThreshold] = useState("medium")
+
+  // Business config state
+  const [bizConfig, setBizConfig] = useState({
+    name: "",
+    type: "multi_store",
+    email: "",
+    timezone: "ist",
+  })
+  const [bizLoading, setBizLoading] = useState(true)
+  const [bizSaving, setBizSaving] = useState(false)
+  const [bizSaved, setBizSaved] = useState(false)
+  const [bizError, setBizError] = useState("")
 
   // Location state
   const [locations, setLocations] = useState<any[]>([])
@@ -78,18 +81,53 @@ export default function SettingsPage() {
   const [userError, setUserError] = useState("")
   const [newUser, setNewUser] = useState({ name: "", email: "", role: "store_manager", location: "All Locations" })
 
+  // Fetch business config from Supabase on mount
+  useEffect(() => {
+    fetch("/api/business-config")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setBizConfig({
+            name: data.name || "",
+            type: data.type || "multi_store",
+            email: data.email || "",
+            timezone: data.timezone || "ist",
+          })
+        }
+      })
+      .catch(() => { })
+      .finally(() => setBizLoading(false))
+  }, [])
+
+  const handleSaveBizConfig = async () => {
+    setBizSaving(true)
+    setBizError("")
+    setBizSaved(false)
+    try {
+      const res = await fetch("/api/business-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bizConfig),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to save")
+      setBizSaved(true)
+      setTimeout(() => setBizSaved(false), 3000)
+    } catch (err: any) {
+      setBizError(err.message)
+    } finally {
+      setBizSaving(false)
+    }
+  }
+
   // Fetch locations from Supabase on mount
   useEffect(() => {
     fetch("/api/locations")
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setLocations(data)
-        } else {
-          setLocations(fallbackLocations)
-        }
+        if (Array.isArray(data)) setLocations(data)
       })
-      .catch(() => setLocations(fallbackLocations))
+      .catch(() => setLocations([]))
       .finally(() => setLocLoading(false))
   }, [])
 
@@ -98,13 +136,9 @@ export default function SettingsPage() {
     fetch("/api/users")
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setUsers(data)
-        } else {
-          setUsers(fallbackUsers)
-        }
+        if (Array.isArray(data)) setUsers(data)
       })
-      .catch(() => setUsers(fallbackUsers))
+      .catch(() => setUsers([]))
       .finally(() => setUserLoading(false))
   }, [])
 
@@ -202,7 +236,7 @@ export default function SettingsPage() {
       </ScrollReveal>
 
       <ScrollReveal delay={0.1}>
-        <Tabs defaultValue="business" className="space-y-6">
+        <Tabs defaultValue={activeTab} className="space-y-6">
           <TabsList className="glass-card h-auto flex-wrap gap-1 p-1">
             <TabsTrigger value="business" className="gap-1.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
               <Building2 className="h-3.5 w-3.5" />
@@ -230,44 +264,70 @@ export default function SettingsPage() {
           <TabsContent value="business">
             <div className="glass-card rounded-xl p-6">
               <h3 className="mb-6 text-base font-semibold text-foreground">Business Configuration</h3>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="bizName">Business Name</Label>
-                  <Input id="bizName" defaultValue="Acme Corp" className="bg-background/60" />
+              {bizLoading ? (
+                <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Loading config...
                 </div>
-                <div className="space-y-2">
-                  <Label>Business Type</Label>
-                  <Select value={businessType} onValueChange={setBusinessType}>
-                    <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="single_store">Single Store</SelectItem>
-                      <SelectItem value="multi_store">Multi-Store Chain</SelectItem>
-                      <SelectItem value="warehouse_model">Store + Warehouse</SelectItem>
-                      <SelectItem value="enterprise">Enterprise</SelectItem>
-                    </SelectContent>
-                  </Select>
+              ) : (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="bizName">Business Name</Label>
+                    <Input
+                      id="bizName"
+                      placeholder="e.g. Acme Corp"
+                      value={bizConfig.name}
+                      onChange={(e) => setBizConfig(p => ({ ...p, name: e.target.value }))}
+                      className="bg-background/60"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Business Type</Label>
+                    <Select value={bizConfig.type} onValueChange={(v) => setBizConfig(p => ({ ...p, type: v }))}>
+                      <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="single_store">Single Store</SelectItem>
+                        <SelectItem value="multi_store">Multi-Store Chain</SelectItem>
+                        <SelectItem value="warehouse_model">Store + Warehouse</SelectItem>
+                        <SelectItem value="enterprise">Enterprise</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contactEmail">Contact Email</Label>
+                    <Input
+                      id="contactEmail"
+                      type="email"
+                      placeholder="e.g. admin@yourcompany.com"
+                      value={bizConfig.email}
+                      onChange={(e) => setBizConfig(p => ({ ...p, email: e.target.value }))}
+                      className="bg-background/60"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <Select value={bizConfig.timezone} onValueChange={(v) => setBizConfig(p => ({ ...p, timezone: v }))}>
+                      <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ist">India (IST)</SelectItem>
+                        <SelectItem value="est">Eastern (EST)</SelectItem>
+                        <SelectItem value="cst">Central (CST)</SelectItem>
+                        <SelectItem value="mst">Mountain (MST)</SelectItem>
+                        <SelectItem value="pst">Pacific (PST)</SelectItem>
+                        <SelectItem value="gmt">GMT</SelectItem>
+                        <SelectItem value="cet">Central Europe (CET)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contactEmail">Contact Email</Label>
-                  <Input id="contactEmail" type="email" defaultValue="admin@acmecorp.com" className="bg-background/60" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Select defaultValue="est">
-                    <SelectTrigger className="bg-background/60"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="est">Eastern (EST)</SelectItem>
-                      <SelectItem value="cst">Central (CST)</SelectItem>
-                      <SelectItem value="mst">Mountain (MST)</SelectItem>
-                      <SelectItem value="pst">Pacific (PST)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <Button className="gap-2">
-                  <Save className="h-4 w-4" />
-                  Save Changes
+              )}
+              {bizError && (
+                <p className="mt-4 text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2">{bizError}</p>
+              )}
+              <div className="mt-6 flex items-center justify-end gap-3">
+                {bizSaved && <span className="text-xs text-[var(--success)]">✓ Saved successfully</span>}
+                <Button className="gap-2" onClick={handleSaveBizConfig} disabled={bizSaving || bizLoading}>
+                  {bizSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {bizSaving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </div>

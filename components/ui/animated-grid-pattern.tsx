@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import type { SVGProps } from "react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
-interface AnimatedGridPatternProps {
+interface AnimatedGridPatternProps extends SVGProps<SVGSVGElement> {
     width?: number;
     height?: number;
     x?: number;
@@ -128,7 +129,7 @@ export function AnimatedGridPattern({
                         animate={{ opacity: maxOpacity }}
                         transition={{
                             duration,
-                            repeat: 1,
+                            repeat: Infinity,
                             delay: index * 0.1,
                             repeatType: "reverse",
                         }}

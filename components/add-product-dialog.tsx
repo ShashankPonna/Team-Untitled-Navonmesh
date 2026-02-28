@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus } from "lucide-react"
+import { Plus, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,14 +32,17 @@ export default function AddProductDialog({ onAdd }: AddProductDialogProps) {
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState("")
 
-    // Dynamic data from API
     const [categories, setCategories] = useState<any[]>([])
     const [locations, setLocations] = useState<any[]>([])
+    const [newCategoryName, setNewCategoryName] = useState("")
+    const [showNewCategory, setShowNewCategory] = useState(false)
+    const [creatingCategory, setCreatingCategory] = useState(false)
 
     const [form, setForm] = useState({
         name: "",
         sku: "",
         category: "",
+        categoryId: "",
         location: "",
         costPrice: "",
         sellingPrice: "",
@@ -57,21 +60,47 @@ export default function AddProductDialog({ onAdd }: AddProductDialogProps) {
             .then(([cats, locs]) => {
                 if (Array.isArray(cats)) setCategories(cats)
                 if (Array.isArray(locs)) setLocations(locs)
+                // If no categories, prompt to create one
+                if (Array.isArray(cats) && cats.length === 0) setShowNewCategory(true)
             })
             .catch((err) => console.error("Failed to load options:", err))
     }, [open])
 
+    const handleCreateCategory = async () => {
+        if (!newCategoryName.trim()) return
+        setCreatingCategory(true)
+        setError("")
+        try {
+            const res = await fetch("/api/categories", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: newCategoryName.trim() }),
+            })
+            if (!res.ok) {
+                const err = await res.json()
+                throw new Error(err.error || "Failed to create category")
+            }
+            const newCat = await res.json()
+            setCategories((prev) => [...prev, newCat])
+            updateField("category", newCat.name)
+            updateField("categoryId", newCat.id)
+            setNewCategoryName("")
+            setShowNewCategory(false)
+        } catch (err: any) {
+            setError(err.message)
+        } finally {
+            setCreatingCategory(false)
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!form.name || !form.sku || !form.category || !form.location) return
+        if (!form.name || !form.sku || !form.categoryId || !form.location) return
 
         setSaving(true)
         setError("")
 
         try {
-            // Find category ID
-            const category = categories.find((c) => c.name === form.category)
-
             // Create the product
             const productRes = await fetch("/api/products", {
                 method: "POST",
@@ -79,7 +108,7 @@ export default function AddProductDialog({ onAdd }: AddProductDialogProps) {
                 body: JSON.stringify({
                     name: form.name,
                     sku: form.sku,
-                    category_id: category?.id || null,
+                    category_id: form.categoryId,
                     cost_price: Number(form.costPrice) || 0,
                     selling_price: Number(form.sellingPrice) || 0,
                     lead_time_days: Number(form.leadTime) || 7,
@@ -123,7 +152,6 @@ export default function AddProductDialog({ onAdd }: AddProductDialogProps) {
 
             const inventoryRecord = await invRes.json()
 
-            // Pass to parent for immediate UI update
             onAdd({
                 id: inventoryRecord.id,
                 name: form.name,
@@ -139,10 +167,9 @@ export default function AddProductDialog({ onAdd }: AddProductDialogProps) {
                 status,
             })
 
-            // Revalidate ALL SWR caches so dashboard, transfers, etc. pick up the new product
             revalidateAll()
 
-            setForm({ name: "", sku: "", category: "", location: "", costPrice: "", sellingPrice: "", stock: "", reorderPoint: "10", leadTime: "7", perishable: false })
+            setForm({ name: "", sku: "", category: "", categoryId: "", location: "", costPrice: "", sellingPrice: "", stock: "", reorderPoint: "10", leadTime: "7", perishable: false })
             setOpen(false)
         } catch (err: any) {
             console.error("Add product error:", err)
@@ -156,19 +183,21 @@ export default function AddProductDialog({ onAdd }: AddProductDialogProps) {
         setForm((prev) => ({ ...prev, [field]: value }))
     }
 
+    const canSubmit = form.name && form.sku && form.categoryId && form.location && !saving
+
     return (
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); setError("") }}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); setError(""); setShowNewCategory(false) }}>
             <DialogTrigger asChild>
                 <Button className="gap-2">
                     <Plus className="h-4 w-4" />
                     Add Product
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[520px] glass-card border-border">
+            <DialogContent className="sm:max-w-[540px] glass-card border-border">
                 <DialogHeader>
                     <DialogTitle className="text-foreground">Add New Product</DialogTitle>
                     <DialogDescription className="text-muted-foreground">
-                        Add a product to your inventory. This saves to the database and updates all dashboards.
+                        Add a product to your inventory. Fills your dashboard with real data.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="mt-2 space-y-4">
@@ -182,60 +211,116 @@ export default function AddProductDialog({ onAdd }: AddProductDialogProps) {
                             <Input id="sku" placeholder="e.g. MBP-14-M3" value={form.sku} onChange={(e) => updateField("sku", e.target.value)} className="bg-background/60" required />
                         </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-4">
+                        {/* Category selector with inline creation */}
                         <div className="space-y-2">
-                            <Label>Category *</Label>
-                            <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
-                                <SelectTrigger className="bg-background/60"><SelectValue placeholder="Select" /></SelectTrigger>
-                                <SelectContent>
-                                    {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <div className="flex items-center justify-between">
+                                <Label>Category *</Label>
+                                <button
+                                    type="button"
+                                    className="text-[11px] text-primary hover:underline"
+                                    onClick={() => setShowNewCategory((p) => !p)}
+                                >
+                                    {showNewCategory ? "Select existing" : "+ New category"}
+                                </button>
+                            </div>
+                            {showNewCategory ? (
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="e.g. Electronics"
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        className="bg-background/60 flex-1"
+                                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleCreateCategory() } }}
+                                    />
+                                    <Button type="button" size="sm" onClick={handleCreateCategory} disabled={!newCategoryName.trim() || creatingCategory} className="shrink-0">
+                                        {creatingCategory ? "..." : <Tag className="h-4 w-4" />}
+                                    </Button>
+                                </div>
+                            ) : (
+                                <Select
+                                    value={form.category}
+                                    onValueChange={(v) => {
+                                        const cat = categories.find((c) => c.name === v)
+                                        updateField("category", v)
+                                        updateField("categoryId", cat?.id || "")
+                                    }}
+                                >
+                                    <SelectTrigger className="bg-background/60">
+                                        <SelectValue placeholder={categories.length === 0 ? "No categories yet" : "Select"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                                        {categories.length === 0 && (
+                                            <div className="px-3 py-2 text-xs text-muted-foreground">
+                                                No categories — click "+ New category" above.
+                                            </div>
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            )}
                         </div>
+
                         <div className="space-y-2">
                             <Label>Location *</Label>
                             <Select value={form.location} onValueChange={(v) => updateField("location", v)}>
-                                <SelectTrigger className="bg-background/60"><SelectValue placeholder="Select" /></SelectTrigger>
+                                <SelectTrigger className="bg-background/60">
+                                    <SelectValue placeholder={locations.length === 0 ? "No locations yet" : "Select"} />
+                                </SelectTrigger>
                                 <SelectContent>
                                     {locations.map((l) => <SelectItem key={l.id} value={l.name}>{l.name}</SelectItem>)}
+                                    {locations.length === 0 && (
+                                        <div className="px-3 py-2 text-xs text-muted-foreground">
+                                            Add a location in Settings first.
+                                        </div>
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
+
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="costPrice">Cost Price ($)</Label>
-                            <Input id="costPrice" type="number" step="0.01" placeholder="0.00" value={form.costPrice} onChange={(e) => updateField("costPrice", e.target.value)} className="bg-background/60" />
+                            <Input id="costPrice" type="number" step="0.01" min="0" placeholder="0.00" value={form.costPrice} onChange={(e) => updateField("costPrice", e.target.value)} className="bg-background/60" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="sellingPrice">Selling Price ($)</Label>
-                            <Input id="sellingPrice" type="number" step="0.01" placeholder="0.00" value={form.sellingPrice} onChange={(e) => updateField("sellingPrice", e.target.value)} className="bg-background/60" />
+                            <Input id="sellingPrice" type="number" step="0.01" min="0" placeholder="0.00" value={form.sellingPrice} onChange={(e) => updateField("sellingPrice", e.target.value)} className="bg-background/60" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="stock">Initial Stock</Label>
-                            <Input id="stock" type="number" placeholder="0" value={form.stock} onChange={(e) => updateField("stock", e.target.value)} className="bg-background/60" />
+                            <Input id="stock" type="number" min="0" placeholder="0" value={form.stock} onChange={(e) => updateField("stock", e.target.value)} className="bg-background/60" />
                         </div>
                     </div>
+
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="reorderPoint">Reorder Point</Label>
-                            <Input id="reorderPoint" type="number" value={form.reorderPoint} onChange={(e) => updateField("reorderPoint", e.target.value)} className="bg-background/60" />
+                            <Input id="reorderPoint" type="number" min="0" value={form.reorderPoint} onChange={(e) => updateField("reorderPoint", e.target.value)} className="bg-background/60" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="leadTime">Lead Time (days)</Label>
-                            <Input id="leadTime" type="number" value={form.leadTime} onChange={(e) => updateField("leadTime", e.target.value)} className="bg-background/60" />
+                            <Input id="leadTime" type="number" min="1" value={form.leadTime} onChange={(e) => updateField("leadTime", e.target.value)} className="bg-background/60" />
                         </div>
                         <div className="flex items-end gap-2 pb-0.5">
                             <Switch checked={form.perishable} onCheckedChange={(v) => updateField("perishable", v)} />
                             <Label className="text-sm">Perishable</Label>
                         </div>
                     </div>
+
                     {error && (
                         <p className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2">{error}</p>
                     )}
+                    {locations.length === 0 && (
+                        <p className="text-xs text-[var(--warning)] bg-[var(--warning)]/10 rounded-lg px-3 py-2">
+                            ⚠️ You need to add a location in Settings before adding a product.
+                        </p>
+                    )}
                     <div className="flex justify-end gap-3 pt-2">
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button type="submit" disabled={!form.name || !form.sku || !form.category || !form.location || saving}>
+                        <Button type="submit" disabled={!canSubmit}>
                             {saving ? "Saving..." : <><Plus className="mr-1.5 h-4 w-4" />Add Product</>}
                         </Button>
                     </div>

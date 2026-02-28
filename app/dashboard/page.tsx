@@ -9,6 +9,9 @@ import {
   Gauge,
   Percent,
   BarChart3,
+  Package,
+  MapPin,
+  ArrowRight,
 } from "lucide-react"
 import AppShell from "@/components/app-shell"
 import KpiCard from "@/components/kpi-card"
@@ -26,13 +29,69 @@ import {
   ScaleOnScroll,
 } from "@/components/scroll-animations"
 import { useDashboard } from "@/hooks/use-api"
-import { kpiData as fallbackKpi } from "@/lib/mock-data"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function DashboardPage() {
   const { data, isLoading } = useDashboard()
 
-  // Use API data when available; only use mock data as a loading fallback
-  const kpi = data?.kpi ?? (isLoading ? fallbackKpi : fallbackKpi)
+  const kpi = data?.kpi
+  const hasData = kpi && kpi.totalInventoryValue > 0
+
+  // ── Empty state: user has no inventory data yet ─────────────────────────────
+  if (!isLoading && !hasData) {
+    return (
+      <AppShell>
+        <ScrollReveal>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Real-time inventory intelligence.</p>
+          </div>
+        </ScrollReveal>
+
+        <div className="glass-card rounded-2xl p-12 text-center max-w-2xl mx-auto mt-8">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
+            <BarChart3 className="h-10 w-10 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground">Welcome to OptiStock AI</h2>
+          <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+            Your dashboard is empty because you haven&apos;t added any inventory yet. Follow these steps to get started:
+          </p>
+
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 text-left">
+            <div className="rounded-xl bg-background/50 p-5 border border-border/50">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-3">
+                <MapPin className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">Step 1: Add Locations</p>
+              <p className="text-xs text-muted-foreground mt-1">Create your stores and warehouses so you can track inventory per location.</p>
+              <Link href="/settings">
+                <Button variant="outline" size="sm" className="mt-3 gap-1.5 w-full">
+                  Go to Settings <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </div>
+            <div className="rounded-xl bg-background/50 p-5 border border-border/50">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-3">
+                <Package className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">Step 2: Add Products</p>
+              <p className="text-xs text-muted-foreground mt-1">Add your products with pricing, stock levels, and reorder points.</p>
+              <Link href="/inventory">
+                <Button variant="outline" size="sm" className="mt-3 gap-1.5 w-full">
+                  Go to Inventory <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <p className="mt-6 text-xs text-muted-foreground">
+            Once you add products, your dashboard will automatically calculate KPIs, charts, and AI-powered alerts.
+          </p>
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell>
@@ -53,8 +112,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Inventory Value"
-            value={kpi.totalInventoryValue}
-            change={kpi.totalInventoryValueChange}
+            value={kpi?.totalInventoryValue ?? 0}
+            change={kpi?.totalInventoryValueChange ?? 0}
             prefix="$"
             icon={DollarSign}
             iconColor="text-primary"
@@ -63,8 +122,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Risk Alerts"
-            value={kpi.riskAlerts}
-            change={kpi.riskAlertsChange}
+            value={kpi?.riskAlerts ?? 0}
+            change={kpi?.riskAlertsChange ?? 0}
             icon={AlertTriangle}
             iconColor="text-destructive"
           />
@@ -72,8 +131,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Forecasted Demand"
-            value={kpi.forecastedDemand}
-            change={kpi.forecastedDemandChange}
+            value={kpi?.forecastedDemand ?? 0}
+            change={kpi?.forecastedDemandChange ?? 0}
             icon={TrendingUp}
             iconColor="text-primary"
           />
@@ -81,8 +140,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Expiry Alerts"
-            value={kpi.expiryAlerts}
-            change={kpi.expiryAlertsChange}
+            value={kpi?.expiryAlerts ?? 0}
+            change={kpi?.expiryAlertsChange ?? 0}
             icon={Clock}
             iconColor="text-warning"
           />
@@ -94,8 +153,8 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Overstock Alerts"
-            value={kpi.overstockAlerts}
-            change={kpi.overstockAlertsChange}
+            value={kpi?.overstockAlerts ?? 0}
+            change={kpi?.overstockAlertsChange ?? 0}
             icon={PackageX}
             iconColor="text-info"
           />
@@ -103,7 +162,7 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Service Level"
-            value={kpi.serviceLevel}
+            value={kpi?.serviceLevel ?? 0}
             change={2.1}
             suffix="%"
             decimals={1}
@@ -114,7 +173,7 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Fill Rate"
-            value={kpi.fillRate}
+            value={kpi?.fillRate ?? 0}
             change={1.8}
             suffix="%"
             decimals={1}
@@ -125,7 +184,7 @@ export default function DashboardPage() {
         <StaggerItem>
           <KpiCard
             title="Inventory Turnover"
-            value={kpi.inventoryTurnover}
+            value={kpi?.inventoryTurnover ?? 0}
             change={5.2}
             suffix="x"
             decimals={1}
@@ -164,3 +223,4 @@ export default function DashboardPage() {
     </AppShell>
   )
 }
+

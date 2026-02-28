@@ -8,9 +8,9 @@ import {
   Package,
   Truck,
   Loader2,
+  BellOff,
 } from "lucide-react"
 import { useAlerts } from "@/hooks/use-api"
-import { alertsData as fallbackAlerts } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 const typeConfig = {
@@ -42,38 +42,49 @@ function formatTimeAgo(dateStr: string) {
 export default function AlertsPanel() {
   const { alerts: apiAlerts, isLoading } = useAlerts()
 
-  // Map API data to the format the UI expects, or fallback to mock
-  const alerts = apiAlerts.length > 0
-    ? apiAlerts.map((a: any) => ({
-      id: a.id,
-      type: a.type,
-      severity: a.severity,
-      product: a.product?.name || "Unknown",
-      location: a.location?.name || "Unknown",
-      message: a.message,
-      time: formatTimeAgo(a.created_at),
-    }))
-    : fallbackAlerts
+  // Real data only — no mock fallback
+  const alerts = apiAlerts.map((a: any) => ({
+    id: a.id,
+    type: a.type,
+    severity: a.severity,
+    product: a.product?.name || "Unknown",
+    location: a.location?.name || "Unknown",
+    message: a.message,
+    time: formatTimeAgo(a.created_at),
+  }))
+
+  const criticalCount = alerts.filter((a: any) => a.severity === "high").length
 
   return (
     <div className="glass-card rounded-xl p-5">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">
-          Active Alerts
-        </h3>
+        <h3 className="text-sm font-semibold text-foreground">Active Alerts</h3>
         <div className="flex items-center gap-1.5">
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          ) : (
+          ) : criticalCount > 0 ? (
             <>
               <AlertTriangle className="h-4 w-4 text-destructive" />
-              <span className="text-xs font-medium text-destructive">
-                {alerts.filter((a: any) => a.severity === "high").length} critical
-              </span>
+              <span className="text-xs font-medium text-destructive">{criticalCount} critical</span>
             </>
+          ) : (
+            <span className="text-xs text-muted-foreground">{alerts.length} alert{alerts.length !== 1 ? "s" : ""}</span>
           )}
         </div>
       </div>
+
+      {/* Empty state */}
+      {!isLoading && alerts.length === 0 && (
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <BellOff className="h-8 w-8 text-muted-foreground/30" />
+          <p className="text-sm font-medium text-foreground">No active alerts</p>
+          <p className="text-xs text-muted-foreground">
+            Alerts are generated automatically when inventory hits critical thresholds.
+          </p>
+        </div>
+      )}
+
+      {/* Alerts list */}
       <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-1">
         {alerts.map((alert: any) => {
           const config = typeConfig[alert.type as keyof typeof typeConfig]
@@ -84,38 +95,23 @@ export default function AlertsPanel() {
               key={alert.id}
               className="flex gap-3 rounded-lg bg-background/50 p-3 transition-colors hover:bg-background/80"
             >
-              <div
-                className={cn(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-                  config.bg
-                )}
-              >
+              <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", config.bg)}>
                 <Icon className={cn("h-4 w-4", config.color)} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-foreground truncate">
-                    {alert.product}
-                  </span>
-                  <span
-                    className={cn(
-                      "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium",
-                      severityBadge[alert.severity as keyof typeof severityBadge]
-                    )}
-                  >
+                  <span className="text-xs font-semibold text-foreground truncate">{alert.product}</span>
+                  <span className={cn(
+                    "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium",
+                    severityBadge[alert.severity as keyof typeof severityBadge]
+                  )}>
                     {alert.severity}
                   </span>
                 </div>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                  {alert.message}
-                </p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{alert.message}</p>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground">
-                    {alert.location}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/50">
-                    {alert.time}
-                  </span>
+                  <span className="text-[10px] text-muted-foreground">{alert.location}</span>
+                  <span className="text-[10px] text-muted-foreground/50">{alert.time}</span>
                 </div>
               </div>
             </div>

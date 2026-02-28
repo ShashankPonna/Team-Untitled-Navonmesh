@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import {
   ArrowRight,
   Plus,
@@ -19,7 +19,7 @@ import {
 } from "@/components/scroll-animations"
 import AnimatedCounter from "@/components/animated-counter"
 import { useTransfers, useLocations, revalidateAll } from "@/hooks/use-api"
-import { transferHistory as fallbackTransfers, locations as fallbackLocations } from "@/lib/mock-data"
+
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -31,18 +31,24 @@ const statusStyles = {
   pending: { label: "Pending", color: "bg-[var(--warning)]/15 text-[var(--warning)]", icon: Clock },
 }
 
-const transferSuggestions = [
-  { product: "AirPods Pro", from: "Warehouse A", to: "Mall Central", quantity: 80, reason: "Mall Central has 5-day stockout risk, Warehouse A has 200+ surplus." },
-  { product: "MacBook Pro 14\"", from: "Warehouse A", to: "Downtown", quantity: 25, reason: "Downtown below reorder point (5/15). Warehouse A has adequate stock." },
-  { product: "Wireless Mouse", from: "Warehouse A", to: "Airport", quantity: 30, reason: "Airport dropping below safety stock. Next supplier delivery in 4 days." },
-]
 
 export default function TransfersPage() {
   const [showSuggestions, setShowSuggestions] = useState(true)
   const [localTransfers, setLocalTransfers] = useState<any[]>([])
   const [approvedSuggestions, setApprovedSuggestions] = useState<Set<number>>(new Set())
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true)
   const { transfers: apiTransfers, isLoading } = useTransfers()
   const { locations: apiLocations } = useLocations()
+
+  // Fetch real AI suggestions on mount
+  useEffect(() => {
+    fetch("/api/transfers/suggestions")
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setSuggestions(d) })
+      .catch(() => setSuggestions([]))
+      .finally(() => setSuggestionsLoading(false))
+  }, [])
 
   const handleAddTransfer = useCallback((transfer: any) => {
     setLocalTransfers((prev) => [transfer, ...prev])
@@ -52,57 +58,32 @@ export default function TransfersPage() {
     setApprovedSuggestions((prev) => new Set(prev).add(index))
 
     try {
-      // Look up product and location IDs
-      const [prodRes, locRes] = await Promise.all([
-        fetch("/api/products"),
-        fetch("/api/locations"),
-      ])
-      const prods = await prodRes.json()
-      const locs = await locRes.json()
-
-      const product = prods.find?.((p: any) => p.name === sug.product)
-      const fromLoc = locs.find?.((l: any) => l.name === sug.from)
-      const toLoc = locs.find?.((l: any) => l.name === sug.to)
-
-      if (product && fromLoc && toLoc) {
-        const res = await fetch("/api/transfers", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            product_id: product.id,
-            from_location_id: fromLoc.id,
-            to_location_id: toLoc.id,
-            quantity: sug.quantity,
-            status: "in_transit",
-          }),
-        })
-        const data = await res.json()
-        setLocalTransfers((prev) => [{
-          id: data.id || crypto.randomUUID(),
-          product: sug.product,
-          from: sug.from,
-          to: sug.to,
+      // Use pre-resolved IDs from the suggestions API
+      const res = await fetch("/api/transfers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product_id: sug.productId,
+          from_location_id: sug.fromLocationId,
+          to_location_id: sug.toLocationId,
           quantity: sug.quantity,
           status: "in_transit",
-          date: new Date().toISOString().split("T")[0],
-        }, ...prev])
-        revalidateAll()
-        return
-      }
+        }),
+      })
+      const data = await res.json()
+      setLocalTransfers((prev) => [{
+        id: data.id || crypto.randomUUID(),
+        product: sug.product,
+        from: sug.from,
+        to: sug.to,
+        quantity: sug.quantity,
+        status: "in_transit",
+        date: new Date().toISOString().split("T")[0],
+      }, ...prev])
+      revalidateAll()
     } catch (err) {
-      console.error("Failed to save approval to Supabase:", err)
+      console.error("Failed to save approved suggestion:", err)
     }
-
-    // Fallback: add locally
-    setLocalTransfers((prev) => [{
-      id: crypto.randomUUID(),
-      product: sug.product,
-      from: sug.from,
-      to: sug.to,
-      quantity: sug.quantity,
-      status: "in_transit",
-      date: new Date().toISOString().split("T")[0],
-    }, ...prev])
   }, [])
 
   const handleStatusChange = useCallback(async (id: string, newStatus: string) => {
@@ -124,22 +105,20 @@ export default function TransfersPage() {
     }
   }, [])
 
-  // Map API transfers to flat format or fallback
-  const apiHistory = apiTransfers.length > 0
-    ? apiTransfers.map((t: any) => ({
-      id: t.id,
-      product: t.product?.name || "Unknown",
-      from: t.from_location?.name || "Unknown",
-      to: t.to_location?.name || "Unknown",
-      quantity: t.quantity,
-      status: t.status,
-      date: t.created_at?.split("T")[0] || "",
-    }))
-    : fallbackTransfers
+  // Map API transfers to flat format - real data only, no mock fallbacks
+  const apiHistory = apiTransfers.map((t: any) => ({
+    id: t.id,
+    product: t.product?.name || "Unknown",
+    from: t.from_location?.name || "Unknown",
+    to: t.to_location?.name || "Unknown",
+    quantity: t.quantity,
+    status: t.status,
+    date: t.created_at?.split("T")[0] || "",
+  }))
   const rawTransferHistory = [...localTransfers, ...apiHistory]
   const transferHistory = Array.from(new Map(rawTransferHistory.map(item => [item.id, item])).values())
 
-  const locations = apiLocations.length > 0 ? apiLocations : fallbackLocations
+  const locations = apiLocations
 
   const inTransit = transferHistory.filter((t: any) => t.status === "in_transit").length
   const completed = transferHistory.filter((t: any) => t.status === "completed").length
@@ -214,6 +193,9 @@ export default function TransfersPage() {
                 <h3 className="text-sm font-semibold text-foreground">
                   AI Transfer Suggestions
                 </h3>
+                {!suggestionsLoading && suggestions.length === 0 && (
+                  <span className="text-xs text-muted-foreground">(no imbalances detected)</span>
+                )}
               </div>
               <button
                 onClick={() => setShowSuggestions(false)}
@@ -222,8 +204,26 @@ export default function TransfersPage() {
                 Dismiss
               </button>
             </div>
+
+            {suggestionsLoading && (
+              <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Analysing inventory for imbalances…
+              </div>
+            )}
+
+            {!suggestionsLoading && suggestions.length === 0 && (
+              <div className="rounded-lg bg-background/50 px-4 py-5 text-center">
+                <CheckCircle2 className="mx-auto h-8 w-8 text-[var(--success)]/60 mb-2" />
+                <p className="text-sm font-medium text-foreground">All locations balanced</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No overstock → understock imbalances detected across your inventory.
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-col gap-3">
-              {transferSuggestions.map((sug, i) => (
+              {suggestions.map((sug, i) => (
                 <div
                   key={i}
                   className="flex flex-col gap-2 rounded-lg bg-background/50 p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -273,6 +273,12 @@ export default function TransfersPage() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               <span className="ml-2 text-sm text-muted-foreground">Loading transfers...</span>
+            </div>
+          ) : transferHistory.length === 0 ? (
+            <div className="py-12 text-center">
+              <Truck className="mx-auto h-10 w-10 text-muted-foreground/30 mb-3" />
+              <p className="text-sm font-medium text-foreground">No transfers yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Use &ldquo;New Transfer&rdquo; above to move stock between locations.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
