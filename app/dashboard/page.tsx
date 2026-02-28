@@ -163,7 +163,7 @@ export default function DashboardPage() {
           <KpiCard
             title="Service Level"
             value={kpi?.serviceLevel ?? 0}
-            change={2.1}
+            change={kpi?.serviceLevelChange ?? 0}
             suffix="%"
             decimals={1}
             icon={Gauge}
@@ -174,7 +174,7 @@ export default function DashboardPage() {
           <KpiCard
             title="Fill Rate"
             value={kpi?.fillRate ?? 0}
-            change={1.8}
+            change={kpi?.fillRateChange ?? 0}
             suffix="%"
             decimals={1}
             icon={Percent}
@@ -185,7 +185,7 @@ export default function DashboardPage() {
           <KpiCard
             title="Inventory Turnover"
             value={kpi?.inventoryTurnover ?? 0}
-            change={5.2}
+            change={kpi?.inventoryTurnoverChange ?? 0}
             suffix="x"
             decimals={1}
             icon={BarChart3}

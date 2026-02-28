@@ -69,3 +69,15 @@ export function useCategories() {
     const { data, error, isLoading, mutate } = useSWR("/api/categories", fetcher)
     return { categories: data || [], error, isLoading, mutate }
 }
+
+// ─── Simulation Baseline ────────────────────────────────────────────────────
+export function useSimulation() {
+    const { data, error, isLoading, mutate } = useSWR("/api/simulation", fetcher)
+    return {
+        hasData: data?.hasData ?? false,
+        baseMetrics: data?.baseMetrics || null,
+        error,
+        isLoading,
+        mutate
+    }
+}

@@ -70,11 +70,11 @@ export async function GET() {
                 .lt("date", now.toISOString().split("T")[0]),
 
             // Sales revenue this week
-            supabase.from("sales").select("revenue")
+            supabase.from("sales").select(`revenue, quantity, product:products(cost_price)`)
                 .gte("date", thisWeekStart.toISOString().split("T")[0]),
 
             // Sales revenue last week
-            supabase.from("sales").select("revenue")
+            supabase.from("sales").select(`revenue, quantity, product:products(cost_price)`)
                 .gte("date", lastWeekStart.toISOString().split("T")[0])
                 .lt("date", thisWeekStart.toISOString().split("T")[0]),
         ])
@@ -94,11 +94,21 @@ export async function GET() {
         const nextMonthForecasts = nextMonthForecastsRes.data || []
         const prevMonthForecasts = prevMonthForecastsRes.data || []
 
-        const thisWeekRevenue = (thisWeekSalesRes.data || []).reduce(
+        const thisWeekSales = thisWeekSalesRes.data || []
+        const lastWeekSales = lastWeekSalesRes.data || []
+
+        const thisWeekRevenue = thisWeekSales.reduce(
             (sum: number, s: any) => sum + Number(s.revenue), 0
         )
-        const lastWeekRevenue = (lastWeekSalesRes.data || []).reduce(
+        const lastWeekRevenue = lastWeekSales.reduce(
             (sum: number, s: any) => sum + Number(s.revenue), 0
+        )
+
+        const thisWeekCOGS = thisWeekSales.reduce(
+            (sum: number, s: any) => sum + s.quantity * Number(s.product?.cost_price || 0), 0
+        )
+        const lastWeekCOGS = lastWeekSales.reduce(
+            (sum: number, s: any) => sum + s.quantity * Number(s.product?.cost_price || 0), 0
         )
 
         // ─── KPI calculations ─────────────────────────────────────────────
@@ -165,6 +175,22 @@ export async function GET() {
         const lastWeekOverstock = lastWeekAlerts.filter((a: any) => a.type === "overstock").length
         const overstockAlertsChange = pctChange(thisWeekOverstock, lastWeekOverstock)
 
+        // Inventory Turnover (Annualized: (COGS for 7 days * 52) / Inventory Value)
+        const inventoryTurnover = totalInventoryValue > 0
+            ? Math.round(((thisWeekCOGS * 52) / totalInventoryValue) * 10) / 10
+            : 0
+
+        const lastWeekInventoryTurnover = totalInventoryValue > 0
+            ? Math.round(((lastWeekCOGS * 52) / totalInventoryValue) * 10) / 10
+            : 0
+
+        const inventoryTurnoverChange = pctChange(inventoryTurnover, lastWeekInventoryTurnover)
+
+        // For Service Level and Fill Rate we lack historical dimension, so their change is returned as 0. 
+        // This stops dummy arrows from showing.
+        const serviceLevelChange = 0
+        const fillRateChange = 0
+
         const kpi = {
             totalInventoryValue: Math.round(totalInventoryValue),
             totalInventoryValueChange,
@@ -177,9 +203,12 @@ export async function GET() {
             overstockAlerts,
             overstockAlertsChange,
             serviceLevel,
+            serviceLevelChange,
             fillRate,
+            fillRateChange,
             stockoutRate,
-            inventoryTurnover: 8.4,
+            inventoryTurnover,
+            inventoryTurnoverChange,
         }
 
         // ─── Demand Forecast chart data ───────────────────────────────────

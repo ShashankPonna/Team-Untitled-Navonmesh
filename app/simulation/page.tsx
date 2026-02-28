@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
-import { FlaskConical, Zap, Clock, TrendingUp, AlertTriangle } from "lucide-react"
+import { FlaskConical, Zap, Clock, TrendingUp, AlertTriangle, Loader2 } from "lucide-react"
 import AppShell from "@/components/app-shell"
 import {
   ScrollReveal,
@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { useSimulation } from "@/hooks/use-api"
 
 const chartTooltipStyle = {
   backgroundColor: "oklch(0.97 0.01 85 / 0.9)",
@@ -40,23 +41,15 @@ const chartTooltipStyle = {
   fontSize: "13px",
 }
 
-const baseMetrics = {
-  rop: 15,
-  safetyStock: 8,
-  avgDailyDemand: 12,
-  leadTime: 7,
-  holdingCost: 2450,
-  stockoutRisk: "Medium",
-  lostSalesRisk: 3400,
-  reorderQty: 50,
-}
-
 export default function SimulationPage() {
   const [demandMultiplier, setDemandMultiplier] = useState([1.0])
   const [leadTimeDelay, setLeadTimeDelay] = useState([0])
   const [scenario, setScenario] = useState("custom")
 
+  const { baseMetrics, isLoading, hasData } = useSimulation()
+
   const simulated = useMemo(() => {
+    if (!baseMetrics) return null
     const mult = demandMultiplier[0]
     const delay = leadTimeDelay[0]
     const newDemand = baseMetrics.avgDailyDemand * mult
@@ -64,7 +57,7 @@ export default function SimulationPage() {
     const newSafetyStock = Math.ceil(1.65 * 4 * Math.sqrt(newLeadTime))
     const newRop = Math.ceil(newDemand * newLeadTime + newSafetyStock)
     const newHolding = Math.round(baseMetrics.holdingCost * (1 + (mult - 1) * 0.3 + delay * 0.05))
-    const daysToStockout = 5 / newDemand
+    const daysToStockout = newDemand > 0 ? 5 / newDemand : 999
     const newStockoutRisk =
       daysToStockout < newLeadTime ? "High" : daysToStockout < 2 * newLeadTime ? "Medium" : "Safe"
     const newLostSales = Math.round(
@@ -82,14 +75,14 @@ export default function SimulationPage() {
       lostSalesRisk: newLostSales,
       reorderQty: newReorderQty,
     }
-  }, [demandMultiplier, leadTimeDelay])
+  }, [demandMultiplier, leadTimeDelay, baseMetrics])
 
-  const comparisonData = [
+  const comparisonData = baseMetrics && simulated ? [
     { metric: "ROP", before: baseMetrics.rop, after: simulated.rop },
     { metric: "Safety Stock", before: baseMetrics.safetyStock, after: simulated.safetyStock },
     { metric: "Reorder Qty", before: baseMetrics.reorderQty, after: simulated.reorderQty },
     { metric: "Holding Cost", before: baseMetrics.holdingCost, after: simulated.holdingCost },
-  ]
+  ] : []
 
   const applyPreset = (preset: string) => {
     setScenario(preset)
@@ -110,6 +103,31 @@ export default function SimulationPage() {
         setDemandMultiplier([1.0])
         setLeadTimeDelay([0])
     }
+  }
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="flex h-[60vh] flex-col items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Loading simulation baseline...</p>
+        </div>
+      </AppShell>
+    )
+  }
+
+  if (!hasData || !baseMetrics || !simulated) {
+    return (
+      <AppShell>
+        <div className="glass-card rounded-2xl p-12 text-center max-w-2xl mx-auto mt-8">
+          <FlaskConical className="h-10 w-10 text-primary mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-foreground">No Data for Simulation</h2>
+          <p className="mt-2 text-muted-foreground">
+            Add products and inventory to run what-if simulations based on your actual data.
+          </p>
+        </div>
+      </AppShell>
+    )
   }
 
   return (
@@ -226,8 +244,8 @@ export default function SimulationPage() {
                   <span className={cn(
                     "font-medium",
                     simulated.stockoutRisk === "High" ? "text-destructive" :
-                    simulated.stockoutRisk === "Medium" ? "text-[var(--warning)]" :
-                    "text-[var(--success)]"
+                      simulated.stockoutRisk === "Medium" ? "text-[var(--warning)]" :
+                        "text-[var(--success)]"
                   )}>
                     {simulated.stockoutRisk}
                   </span>
