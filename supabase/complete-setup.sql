@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS inventory         CASCADE;
 DROP TABLE IF EXISTS products          CASCADE;
 DROP TABLE IF EXISTS categories        CASCADE;
 DROP TABLE IF EXISTS locations         CASCADE;
+DROP TABLE IF EXISTS business_config   CASCADE;
 DROP TABLE IF EXISTS app_users         CASCADE;
 
 -- ─── Locations ───────────────────────────────────────────────────────────────
@@ -138,6 +139,20 @@ CREATE TABLE app_users (
   UNIQUE (owner_id, email)
 );
 
+-- ─── Business Config (one row per user) ──────────────────────────────────────
+CREATE TABLE business_config (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL DEFAULT '',
+  type       TEXT NOT NULL DEFAULT 'multi_store'
+               CHECK (type IN ('single_store', 'multi_store', 'warehouse_model', 'enterprise')),
+  email      TEXT NOT NULL DEFAULT '',
+  timezone   TEXT NOT NULL DEFAULT 'ist',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id)
+);
+
 -- ─── Updated_at trigger function ─────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
@@ -147,11 +162,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_locations_updated  BEFORE UPDATE ON locations  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER trg_products_updated   BEFORE UPDATE ON products   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER trg_inventory_updated  BEFORE UPDATE ON inventory  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER trg_transfers_updated  BEFORE UPDATE ON transfers  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER trg_app_users_updated  BEFORE UPDATE ON app_users  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_locations_updated      BEFORE UPDATE ON locations       FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_products_updated       BEFORE UPDATE ON products        FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_inventory_updated      BEFORE UPDATE ON inventory       FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_transfers_updated      BEFORE UPDATE ON transfers       FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_app_users_updated      BEFORE UPDATE ON app_users       FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_business_config_updated BEFORE UPDATE ON business_config FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ─── Indexes ─────────────────────────────────────────────────────────────────
 CREATE INDEX idx_inventory_user     ON inventory(user_id);
@@ -166,6 +182,7 @@ CREATE INDEX idx_sales_user         ON sales(user_id);
 CREATE INDEX idx_sales_date         ON sales(date);
 CREATE INDEX idx_demand_user        ON demand_forecasts(user_id);
 CREATE INDEX idx_demand_date        ON demand_forecasts(date);
+CREATE INDEX idx_business_config_user ON business_config(user_id);
 
 -- ─── Row Level Security ───────────────────────────────────────────────────────
 ALTER TABLE locations        ENABLE ROW LEVEL SECURITY;
@@ -177,16 +194,18 @@ ALTER TABLE alerts           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE demand_forecasts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sales            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app_users        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE business_config  ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "own_locations"       ON locations        FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_categories"      ON categories       FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_products"        ON products         FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_inventory"       ON inventory        FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_transfers"       ON transfers        FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_alerts"          ON alerts           FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_demand_forecasts" ON demand_forecasts FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_sales"           ON sales            FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "own_app_users"       ON app_users        FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "own_locations"        ON locations        FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own_categories"       ON categories       FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own_products"         ON products         FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own_inventory"        ON inventory        FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own_transfers"        ON transfers        FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own_alerts"           ON alerts           FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own_demand_forecasts"  ON demand_forecasts FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own_sales"            ON sales            FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "own_app_users"        ON app_users        FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "own_business_config"  ON business_config  FOR ALL USING (auth.uid() = user_id)  WITH CHECK (auth.uid() = user_id);
 
 -- ─── Trigger: no auto-seed — users add their own real data ───────────────────
 -- New users start with an empty workspace and fill it themselves.
