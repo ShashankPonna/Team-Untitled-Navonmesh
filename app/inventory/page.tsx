@@ -167,7 +167,7 @@ export default function InventoryPage() {
             <StaggerItem>
               <div className="glass-card rounded-xl p-5">
                 <p className="text-xs text-muted-foreground">Total Inventory Value</p>
-                <AnimatedCounter value={totalValue} prefix="$" className="text-2xl font-bold text-foreground" />
+                <AnimatedCounter value={totalValue} prefix="Rs." className="text-2xl font-bold text-foreground" />
               </div>
             </StaggerItem>
             <StaggerItem>
@@ -283,7 +283,7 @@ export default function InventoryPage() {
                               </div>
                             </td>
                             <td className="px-5 py-3.5 text-sm font-medium text-foreground">
-                              ${(item.stock * item.costPrice).toLocaleString()}
+                              Rs.{(item.stock * item.costPrice).toLocaleString()}
                             </td>
                             <td className="px-5 py-3.5">
                               <Badge variant="secondary" className={cn("gap-1", config.color)}>

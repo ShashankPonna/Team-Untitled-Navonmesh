@@ -30,9 +30,11 @@ export function AnimatedGridPattern({
     maxOpacity = 0.5,
     duration = 4,
     repeatDelay = 0.5,
+    id,
     ...props
 }: AnimatedGridPatternProps) {
-    const id = useId();
+    const fallbackId = useId();
+    const patternId = id ?? fallbackId;
     const containerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const [squares, setSquares] = useState(() => generateSquares(numSquares));
@@ -107,7 +109,7 @@ export function AnimatedGridPattern({
         >
             <defs>
                 <pattern
-                    id={id}
+                    id={patternId}
                     width={width}
                     height={height}
                     patternUnits="userSpaceOnUse"
@@ -121,7 +123,7 @@ export function AnimatedGridPattern({
                     />
                 </pattern>
             </defs>
-            <rect width="100%" height="100%" fill={`url(#${id})`} />
+            <rect width="100%" height="100%" fill={`url(#${patternId})`} />
             <svg x={x} y={y} className="overflow-visible">
                 {squares.map(({ pos: [x, y], id }, index) => (
                     <motion.rect

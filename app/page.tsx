@@ -4,14 +4,18 @@ import { Boxes, ArrowRight, TrendingUp, Package, LayoutDashboard } from "lucide-
 import { Inter } from "next/font/google"
 import { Typewriter } from "@/components/ui/typewriter-text"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 import { cn } from "@/lib/utils"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export default function LandingPage() {
     return (
-        <div className="min-h-screen bg-background text-foreground flex flex-col pt-16 selection:bg-primary/30 relative overflow-hidden">
+        <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/30 relative overflow-hidden">
+            <Navbar />
             <AnimatedGridPattern
+                id="landing-hero-pattern"
                 numSquares={30}
                 maxOpacity={0.1}
                 duration={3}
@@ -21,7 +25,7 @@ export default function LandingPage() {
                     "inset-x-0 inset-y-[-30%] h-[200%] skew-y-12",
                 )}
             />
-            <main className="flex-1 flex items-center justify-center p-6 text-center relative z-10">
+            <main className="flex-1 flex items-center justify-center p-6 pt-24 text-center relative z-10">
                 <div className="max-w-3xl space-y-8 animate-in fade-in zoom-in duration-700">
                     <div className="flex justify-center">
                         <div className="h-16 w-16 bg-primary/20 flex items-center justify-center rounded-2xl shadow-xl shadow-primary/10">
@@ -61,7 +65,7 @@ export default function LandingPage() {
                 </div>
             </main>
 
-            <div className="py-20 bg-background/50 border-t border-border mt-auto">
+            <div id="features" className="py-20 bg-background/50 border-t border-border mt-auto relative z-10">
                 <div className="max-w-5xl mx-auto px-6 grid sm:grid-cols-3 gap-8">
                     <div className="flex flex-col items-center text-center space-y-4">
                         <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
@@ -86,6 +90,8 @@ export default function LandingPage() {
                     </div>
                 </div>
             </div>
+
+            <Footer />
         </div>
     )
 }

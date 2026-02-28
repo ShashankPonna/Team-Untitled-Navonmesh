@@ -359,7 +359,7 @@ export default function TransfersPage() {
                 <p className="text-xs text-muted-foreground">{loc.city}</p>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">{loc.products || 0} products</span>
-                  <span className="font-medium text-foreground">${((loc.totalValue || 0) / 1000).toFixed(0)}K</span>
+                  <span className="font-medium text-foreground">Rs.{((loc.totalValue || 0) / 1000).toFixed(0)}K</span>
                 </div>
                 <Badge variant="secondary" className="w-fit text-[10px] capitalize">
                   {loc.type}

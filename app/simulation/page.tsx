@@ -252,7 +252,7 @@ export default function SimulationPage() {
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Lost Sales Risk</span>
-                  <span className="font-medium text-foreground">${simulated.lostSalesRisk.toLocaleString()}</span>
+                  <span className="font-medium text-foreground">Rs.{simulated.lostSalesRisk.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -286,7 +286,7 @@ export default function SimulationPage() {
                 { label: "New ROP", before: baseMetrics.rop, after: simulated.rop },
                 { label: "Safety Stock", before: baseMetrics.safetyStock, after: simulated.safetyStock },
                 { label: "Reorder Qty", before: baseMetrics.reorderQty, after: simulated.reorderQty },
-                { label: "Holding Cost", before: baseMetrics.holdingCost, after: simulated.holdingCost, prefix: "$" },
+                { label: "Holding Cost", before: baseMetrics.holdingCost, after: simulated.holdingCost, prefix: "Rs." },
               ].map((m) => {
                 const changed = m.after !== m.before
                 const increased = m.after > m.before

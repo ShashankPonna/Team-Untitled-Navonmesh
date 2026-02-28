@@ -50,7 +50,7 @@ export default function ReportsPage() {
         Store: s.store,
         Efficiency: s.efficiency + "%",
         Stockouts: s.stockouts,
-        Revenue: "$" + s.revenue.toLocaleString(),
+        Revenue: "Rs." + s.revenue.toLocaleString(),
       })), "inventory_report")
     }
   }
@@ -104,7 +104,7 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Holding Cost (est.)</p>
-                    <AnimatedCounter value={kpi.holdingCost} prefix="$" className="text-xl font-bold text-foreground" />
+                    <AnimatedCounter value={kpi.holdingCost} prefix="Rs." className="text-xl font-bold text-foreground" />
                     <p className="text-[11px] text-muted-foreground">20% of inventory value</p>
                   </div>
                 </div>
@@ -118,7 +118,7 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Potential Lost Revenue</p>
-                    <AnimatedCounter value={kpi.lostRevenue} prefix="$" className="text-xl font-bold text-foreground" />
+                    <AnimatedCounter value={kpi.lostRevenue} prefix="Rs." className="text-xl font-bold text-foreground" />
                     <p className="text-[11px] text-muted-foreground">From critical/low-stock items</p>
                   </div>
                 </div>
@@ -132,7 +132,7 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Inventory Value</p>
-                    <AnimatedCounter value={kpi.inventoryValue} prefix="$" className="text-xl font-bold text-foreground" />
+                    <AnimatedCounter value={kpi.inventoryValue} prefix="Rs." className="text-xl font-bold text-foreground" />
                   </div>
                 </div>
               </div>

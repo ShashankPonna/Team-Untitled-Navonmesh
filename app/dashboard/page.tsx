@@ -114,7 +114,7 @@ export default function DashboardPage() {
             title="Inventory Value"
             value={kpi?.totalInventoryValue ?? 0}
             change={kpi?.totalInventoryValueChange ?? 0}
-            prefix="$"
+            prefix="Rs."
             icon={DollarSign}
             iconColor="text-primary"
           />

@@ -149,7 +149,7 @@ export function StoreComparisonChart({ data }: { data?: any[] }) {
             <XAxis
               type="number"
               tick={{ fontSize: 12, fill: "oklch(0.50 0.02 260)" }}
-              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`}
+              tickFormatter={(v) => `Rs.${(v / 1000).toFixed(0)}K`}
             />
             <YAxis
               dataKey="store"
@@ -159,7 +159,7 @@ export function StoreComparisonChart({ data }: { data?: any[] }) {
             />
             <Tooltip
               contentStyle={chartTooltipStyle}
-              formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]}
+              formatter={(v: number) => [`Rs.${v.toLocaleString()}`, "Revenue"]}
             />
             <Bar dataKey="revenue" fill="#5aada0" radius={[0, 4, 4, 0]} name="Revenue" />
           </BarChart>
