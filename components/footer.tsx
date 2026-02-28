@@ -17,9 +17,7 @@ export function Footer() {
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 text-primary">
                                 <Boxes className="h-4 w-4" />
                             </div>
-                            <span className="text-xl font-bold tracking-tight">
-                                OptiStock<span className="text-primary">AI</span>
-                            </span>
+                            StockFlow
                         </Link>
                         <p className="text-xs text-muted-foreground/80 max-w-sm leading-relaxed">
                             The intelligent inventory optimization platform. Predict demand, manage multi-location stock, and prevent stockouts with AI-driven insights.

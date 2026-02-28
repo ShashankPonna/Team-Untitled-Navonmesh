@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "OptiStock AI - Intelligent Inventory Optimization",
+  title: "StockFlow - Intelligent Inventory Optimization",
   description:
     "AI-powered inventory optimization platform for single stores, multi-store chains, warehouses, and enterprise supply chains.",
   generator: "v0.app",

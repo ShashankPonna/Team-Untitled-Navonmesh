@@ -60,7 +60,7 @@ export default function LoginPage() {
                     </div>
                     <h2 className="text-2xl font-bold">{isLogin ? "Welcome Back" : "Create Account"}</h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                        {isLogin ? "Sign in to your OptiStock AI workspace" : "Get started with inventory optimization"}
+                        {isLogin ? "Sign in to your StockFlow workspace" : "Get started with inventory optimization"}
                     </p>
                 </div>
 
@@ -70,7 +70,7 @@ export default function LoginPage() {
                         <Input
                             id="email"
                             type="email"
-                            placeholder="admin@optistock.ai"
+                            placeholder="admin@stockflow.com"
                             value={form.email}
                             onChange={(e) => setForm({ ...form, email: e.target.value })}
                             required

@@ -33,7 +33,7 @@ export default function LandingPage() {
                         </div>
                     </div>
                     <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight">
-                        Welcome to <span className={cn("text-primary tracking-normal", inter.className)}>OptiStock AI</span>
+                        Welcome to <span className={cn("text-primary tracking-normal", inter.className)}>StockFlow</span>
                     </h1>
                     <div className="text-lg sm:text-2xl text-muted-foreground max-w-2xl mx-auto opacity-90 h-[60px] sm:h-[40px] flex items-center justify-center">
                         <Typewriter

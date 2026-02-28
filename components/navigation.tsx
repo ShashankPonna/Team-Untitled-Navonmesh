@@ -57,7 +57,7 @@ export default function Navigation() {
             </div>
             <div className="flex flex-col">
               <span className="text-base font-semibold leading-tight text-foreground">
-                OptiStock
+                StockFlow
               </span>
               <span className="text-[10px] font-medium uppercase tracking-widest text-primary">
                 AI

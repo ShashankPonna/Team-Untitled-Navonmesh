@@ -53,7 +53,7 @@ export default function DashboardPage() {
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
             <BarChart3 className="h-10 w-10 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground">Welcome to OptiStock AI</h2>
+          <h2 className="text-2xl font-bold text-foreground">Welcome to StockFlow</h2>
           <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
             Your dashboard is empty because you haven&apos;t added any inventory yet. Follow these steps to get started:
           </p>

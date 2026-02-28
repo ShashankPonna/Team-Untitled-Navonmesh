@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import {
   Building2,
@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils"
 
 
 
-export default function SettingsPage() {
+function SettingsContent() {
   const searchParams = useSearchParams()
   const activeTab = searchParams.get("tab") || "business"
 
@@ -614,5 +614,13 @@ export default function SettingsPage() {
         </Tabs>
       </ScrollReveal>
     </AppShell>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense>
+      <SettingsContent />
+    </Suspense>
   )
 }

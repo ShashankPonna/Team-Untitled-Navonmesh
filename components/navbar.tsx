@@ -41,7 +41,7 @@ export function Navbar() {
                         <Boxes className="h-5 w-5" />
                     </div>
                     <span className={cn("text-xl font-bold tracking-tight", inter.className)}>
-                        OptiStock<span className="text-primary">AI</span>
+                        StockFlow
                     </span>
                 </Link>
 
